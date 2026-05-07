@@ -1,0 +1,10 @@
+node_modules
+.turbo
+dist
+.next
+.env
+.env.local
+.env.*.local
+packages/db/.env
+*.log
+pnpm-lock.yaml
