@@ -7,6 +7,7 @@ import { auth } from "./lib/auth.ts";
 import { projectsRouter } from "./routes/projects.ts";
 import { transactionsRouter } from "./routes/transactions.ts";
 import { analyticsRouter } from "./routes/analytics.ts";
+import { workspacesRouter } from "./routes/workspaces.ts";
 
 const app = new Hono();
 
@@ -27,6 +28,7 @@ app.get("/health", (c) => c.json({ status: "ok" }));
 
 app.route("/api/projects", projectsRouter);
 app.route("/api/analytics", analyticsRouter);
+app.route("/api/workspaces", workspacesRouter);
 app.route("/api", transactionsRouter);
 
 const port = Number(process.env["PORT"] ?? 3001);

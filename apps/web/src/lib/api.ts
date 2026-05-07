@@ -1,14 +1,11 @@
-const API_URL = process.env["NEXT_PUBLIC_API_URL"] ?? "http://localhost:3001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
 interface RequestOptions extends RequestInit {
   token?: string;
   workspaceId?: string;
 }
 
-export async function apiRequest<T>(
-  path: string,
-  options: RequestOptions = {}
-): Promise<T> {
+export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { token, workspaceId, ...init } = options;
 
   const headers: Record<string, string> = {
