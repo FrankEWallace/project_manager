@@ -5,3 +5,4 @@ export * from "./projects.ts";
 export * from "./financials.ts";
 export * from "./audit.ts";
 export * from "./auth.ts";
+export * from "./relations.ts";

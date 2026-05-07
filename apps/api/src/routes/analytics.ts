@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { db, projects, transactions, milestones, phases } from "@repo/db";
-import { eq, sql, count, and, lt, inArray } from "drizzle-orm";
+import { eq, sql, count, and, inArray } from "drizzle-orm";
 import { requireAuth } from "../middleware/auth.ts";
 
 export const analyticsRouter = new Hono()
@@ -71,6 +71,40 @@ export const analyticsRouter = new Hono()
       .groupBy(projects.categoryId);
 
     return c.json({ data: rows });
+  })
+
+  // Milestones completion summary
+  .get("/milestones-summary", async (c) => {
+    const { workspaceId } = c.get("auth");
+
+    const projectIds = await db
+      .select({ id: projects.id })
+      .from(projects)
+      .where(and(eq(projects.workspaceId, workspaceId), eq(projects.archived, false)));
+
+    if (projectIds.length === 0) {
+      return c.json({ data: { total: 0, completed: 0, completionRate: 0 } });
+    }
+
+    const ids = projectIds.map((p) => p.id);
+
+    const [total, completed] = await Promise.all([
+      db.select({ count: count() }).from(milestones).where(inArray(milestones.projectId, ids)),
+      db.select({ count: count() }).from(milestones).where(
+        and(inArray(milestones.projectId, ids), eq(milestones.status, "completed"))
+      ),
+    ]);
+
+    const totalCount = total[0]?.count ?? 0;
+    const completedCount = completed[0]?.count ?? 0;
+
+    return c.json({
+      data: {
+        total: totalCount,
+        completed: completedCount,
+        completionRate: totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100),
+      },
+    });
   })
 
   // Top spending projects
