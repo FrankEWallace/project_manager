@@ -11,6 +11,7 @@ import { transactionsRouter } from "./routes/transactions.ts";
 import { analyticsRouter } from "./routes/analytics.ts";
 import { workspacesRouter } from "./routes/workspaces.ts";
 import { actorsRouter } from "./routes/actors.ts";
+import { projectActorsRouter } from "./routes/projectActors.ts";
 
 const app = new Hono();
 
@@ -35,6 +36,7 @@ app.route("/api/projects", milestonesRouter);
 app.route("/api/analytics", analyticsRouter);
 app.route("/api/workspaces", workspacesRouter);
 app.route("/api/actors", actorsRouter);
+app.route("/api/projects", projectActorsRouter);
 app.route("/api", transactionsRouter);
 
 const port = Number(process.env["PORT"] ?? 3001);
