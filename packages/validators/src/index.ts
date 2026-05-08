@@ -107,6 +107,11 @@ export const createTransactionSchema = z.object({
 
 export const updateTransactionSchema = createTransactionSchema.partial();
 
+export const updateWorkspaceSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  baseCurrency: z.string().length(3).optional(),
+});
+
 // ─── Invitation ───────────────────────────────────────────────────────────────
 
 export const inviteUserSchema = z.object({
