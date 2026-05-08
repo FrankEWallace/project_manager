@@ -9,9 +9,29 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Building2, Check } from "lucide-react";
+import { Building2, Check, UserPlus, X, Mail, Users } from "lucide-react";
+import { apiRequest } from "@/lib/api";
+import { useSession } from "@/lib/auth-client";
+import { getWorkspaceId } from "@/lib/workspace";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+
+interface Member {
+  id: string;
+  userId: string;
+  role: "owner" | "admin" | "member";
+  joinedAt: string;
+  name: string | null;
+  email: string | null;
+}
+
+interface Invitation {
+  id: string;
+  email: string;
+  role: "owner" | "admin" | "member";
+  expiresAt: string;
+  createdAt: string;
+}
 
 interface Workspace {
   id: string;
@@ -47,6 +67,147 @@ const CURRENCIES = [
   { value: "MXN", label: "MXN — Mexican Peso" },
   { value: "PKR", label: "PKR — Pakistani Rupee" },
 ] as const;
+
+// ─── Team Card ────────────────────────────────────────────────────────────────
+
+function TeamCard() {
+  const { data: session } = useSession();
+  const { data: members, loading: membersLoading, refetch: refetchMembers } = useApi<Member[]>("/api/invitations/members");
+  const { data: invites, loading: invitesLoading, refetch: refetchInvites } = useApi<Invitation[]>("/api/invitations");
+  const { mutate: sendInvite, loading: inviting, error: inviteError } = useMutation<{ email: string; role: string }, Invitation>("/api/invitations");
+
+  const [email, setEmail] = React.useState("");
+  const [role, setRole] = React.useState<"admin" | "member">("member");
+  const [sent, setSent] = React.useState(false);
+  const [revoking, setRevoking] = React.useState<string | null>(null);
+
+  const token = session?.session?.token;
+  const workspaceId = getWorkspaceId();
+
+  async function handleInvite(e: React.FormEvent) {
+    e.preventDefault();
+    const result = await sendInvite({ email, role });
+    if (result) {
+      setEmail("");
+      setSent(true);
+      refetchInvites();
+      setTimeout(() => setSent(false), 3000);
+    }
+  }
+
+  async function handleRevoke(id: string) {
+    if (!token || !workspaceId) return;
+    setRevoking(id);
+    try {
+      await apiRequest(`/api/invitations/${id}`, { method: "DELETE", token, workspaceId });
+      refetchInvites();
+    } finally {
+      setRevoking(null);
+    }
+  }
+
+  const roleBadge = (r: string) => {
+    if (r === "owner") return <Badge variant="default">{r}</Badge>;
+    if (r === "admin") return <Badge variant="secondary">{r}</Badge>;
+    return <Badge variant="outline">{r}</Badge>;
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base flex items-center gap-2">
+          <Users className="h-4 w-4" />
+          Team
+        </CardTitle>
+        <CardDescription>Manage members and send invitations.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+
+        {/* Members */}
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-foreground">Members</p>
+          {membersLoading ? (
+            <div className="space-y-2">
+              {[1, 2].map((i) => <div key={i} className="h-10 bg-muted animate-pulse rounded-lg" />)}
+            </div>
+          ) : (
+            <div className="divide-y divide-border rounded-lg border">
+              {(members ?? []).map((m) => (
+                <div key={m.id} className="flex items-center justify-between px-3 py-2.5">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">{m.name ?? "—"}</p>
+                    <p className="text-xs text-muted-foreground truncate">{m.email ?? "—"}</p>
+                  </div>
+                  {roleBadge(m.role)}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <Separator />
+
+        {/* Invite form */}
+        <div className="space-y-3">
+          <p className="text-sm font-medium text-foreground flex items-center gap-2">
+            <Mail className="h-4 w-4" />
+            Invite someone
+          </p>
+          <form onSubmit={handleInvite} className="flex gap-2">
+            <Input
+              type="email"
+              placeholder="colleague@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="flex-1"
+            />
+            <Select value={role} onValueChange={(v) => setRole(v as "admin" | "member")}>
+              <SelectTrigger className="w-28">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="member">Member</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button type="submit" disabled={inviting || sent}>
+              {sent ? <><Check className="h-4 w-4" /> Sent</> : inviting ? "Sending…" : <><UserPlus className="h-4 w-4" /> Invite</>}
+            </Button>
+          </form>
+          {inviteError && <p className="text-xs text-destructive">{inviteError}</p>}
+        </div>
+
+        {/* Pending invites */}
+        {!invitesLoading && (invites ?? []).length > 0 && (
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-foreground">Pending invitations</p>
+            <div className="divide-y divide-border rounded-lg border">
+              {(invites ?? []).map((inv) => (
+                <div key={inv.id} className="flex items-center justify-between px-3 py-2.5">
+                  <div className="min-w-0">
+                    <p className="text-sm truncate">{inv.email}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {inv.role} · expires {new Date(inv.expiresAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={revoking === inv.id}
+                    onClick={() => handleRevoke(inv.id)}
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 // ─── Workspace Settings Form ──────────────────────────────────────────────────
 
@@ -151,6 +312,8 @@ export default function SettingsPage() {
       ) : workspace ? (
         <div className="space-y-6">
           <WorkspaceSettingsCard workspace={workspace} onSaved={refetch} />
+
+          <TeamCard />
 
           <Card className="border-destructive/30">
             <CardHeader>
