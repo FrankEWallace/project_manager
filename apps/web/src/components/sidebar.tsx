@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, FolderKanban, Users, BarChart3, Wallet, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, FolderKanban, Users, BarChart3, Wallet, CalendarDays, Settings, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { signOut, useSession } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 const nav = [
   { label: "Dashboard", href: "/", icon: LayoutDashboard },
   { label: "Projects", href: "/projects", icon: FolderKanban },
+  { label: "Timeline", href: "/timeline", icon: CalendarDays },
   { label: "Finances", href: "/finances", icon: Wallet },
   { label: "Actors", href: "/actors", icon: Users },
   { label: "Analytics", href: "/analytics", icon: BarChart3 },
