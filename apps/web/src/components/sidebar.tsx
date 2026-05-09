@@ -7,7 +7,6 @@ import { LayoutDashboard, FolderKanban, Users, BarChart3, Wallet, CalendarDays, 
 import { cn } from "@/lib/utils";
 import { signOut, useSession } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 
 const nav = [
@@ -91,9 +90,9 @@ export function Sidebar() {
       <Separator />
 
       <div className="px-4 py-4 flex items-center gap-3">
-        <Avatar className="h-8 w-8">
-          <AvatarFallback className="text-xs bg-primary/10 text-primary">{initials}</AvatarFallback>
-        </Avatar>
+        <div className="w-8 h-8 rounded-full bg-primary/10 text-primary ring-2 ring-border flex items-center justify-center text-xs font-semibold shrink-0">
+          {initials}
+        </div>
         <div className="min-w-0">
           <p className="text-sm font-medium text-foreground truncate">{session?.user?.name ?? "Loading…"}</p>
           <p className="text-xs text-muted-foreground truncate">{session?.user?.email}</p>

@@ -22,6 +22,7 @@ import {
   Plus, Layers, Pencil, Trash2, User, Building2, Mail, Phone,
   UserPlus, MoreHorizontal, CheckSquare, Square,
 } from "lucide-react";
+import { AvatarGroup, AvatarGroupTooltip } from "@/components/ui/avatar-group";
 import Link from "next/link";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -786,7 +787,22 @@ function ActorsTab({ projectId }: { projectId: string }) {
   return (
     <div className="space-y-4 pt-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold">Linked actors</h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-sm font-semibold">Linked actors</h2>
+          {projectActorsList && projectActorsList.length > 0 && (
+            <AvatarGroup className="-space-x-2 h-8">
+              {projectActorsList.map((pa) => (
+                <div
+                  key={pa.id}
+                  className="w-8 h-8 rounded-full bg-primary/10 text-primary border-2 border-background flex items-center justify-center text-xs font-semibold"
+                >
+                  <AvatarGroupTooltip>{pa.actor.name} · {pa.actor.type}</AvatarGroupTooltip>
+                  {nameInitials(pa.actor.name)}
+                </div>
+              ))}
+            </AvatarGroup>
+          )}
+        </div>
         {available.length > 0 && (
           <Button size="sm" variant="outline" onClick={() => setLinkOpen(true)}>
             <UserPlus className="h-3.5 w-3.5 mr-1" /> Link actor

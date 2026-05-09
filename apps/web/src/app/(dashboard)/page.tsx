@@ -8,6 +8,8 @@ import { formatCurrency } from "@/lib/utils";
 import { AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { OnboardingChecklist } from "@/components/ui/onboarding-checklist";
+import { useSession } from "@/lib/auth-client";
 
 interface Portfolio {
   statusBreakdown: { status: string; count: number }[];
@@ -57,9 +59,17 @@ const statusColors: Record<string, string> = {
   overdue: "bg-red-500",
 };
 
+interface Project { id: string }
+interface Actor { id: string }
+interface Member { id: string }
+
 export default function DashboardPage() {
+  const { data: session } = useSession();
   const { data: portfolio, loading: pLoading } = useApi<Portfolio>("/api/analytics/portfolio");
   const { data: trends, loading: tLoading } = useApi<Trends>("/api/analytics/trends");
+  const { data: projects } = useApi<Project[]>("/api/projects");
+  const { data: actors } = useApi<Actor[]>("/api/actors");
+  const { data: members } = useApi<Member[]>("/api/invitations/members");
 
   const loading = pLoading || tLoading;
 
@@ -109,6 +119,28 @@ export default function DashboardPage() {
             <Link href="/projects/new">New project</Link>
           </Button>
         </div>
+
+        {/* Onboarding checklist — shown until all steps complete */}
+        {(() => {
+          const hasProject = (projects?.length ?? 0) > 0;
+          const hasActor = (actors?.length ?? 0) > 0;
+          const hasTeamMember = (members?.length ?? 0) > 1;
+          const hasIncome = (portfolio?.financials.totalIncome ?? 0) > 0;
+          const steps = [
+            { id: 1, title: "Create your first project", isCompleted: hasProject },
+            { id: 2, title: "Add an actor (client, collaborator…)", isCompleted: hasActor },
+            { id: 3, title: "Log your first transaction", isCompleted: hasIncome },
+            { id: 4, title: "Invite a team member", isCompleted: hasTeamMember },
+            { id: 5, title: "Set up workspace settings", isCompleted: !!(session?.user?.name) },
+          ];
+          if (steps.every((s) => s.isCompleted)) return null;
+          return (
+            <OnboardingChecklist
+              steps={steps}
+              title={`Getting started · ${steps.filter(s => s.isCompleted).length}/${steps.length}`}
+            />
+          );
+        })()}
 
         {/* Unified KPI grid */}
         <div className="overflow-hidden rounded-xl bg-card ring-1 ring-foreground/10">

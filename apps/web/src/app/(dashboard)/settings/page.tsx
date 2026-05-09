@@ -13,6 +13,7 @@ import { Building2, Check, UserPlus, X, Mail, Users } from "lucide-react";
 import { apiRequest } from "@/lib/api";
 import { useSession } from "@/lib/auth-client";
 import { getWorkspaceId } from "@/lib/workspace";
+import { AvatarGroup, AvatarGroupTooltip } from "@/components/ui/avatar-group";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -124,8 +125,31 @@ function TeamCard() {
       <CardContent className="space-y-6">
 
         {/* Members */}
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-foreground">Members</p>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium text-foreground">Members</p>
+            {!membersLoading && (members ?? []).length > 0 && (
+              <AvatarGroup className="-space-x-2 h-7">
+                {(members ?? []).map((m) => {
+                  const initials = (m.name ?? m.email ?? "?")
+                    .split(" ")
+                    .map((n) => n[0])
+                    .join("")
+                    .toUpperCase()
+                    .slice(0, 2);
+                  return (
+                    <div
+                      key={m.id}
+                      className="w-7 h-7 rounded-full bg-primary/10 text-primary border-2 border-background flex items-center justify-center text-[10px] font-semibold"
+                    >
+                      <AvatarGroupTooltip>{m.name ?? m.email ?? "Unknown"} · {m.role}</AvatarGroupTooltip>
+                      {initials}
+                    </div>
+                  );
+                })}
+              </AvatarGroup>
+            )}
+          </div>
           {membersLoading ? (
             <div className="space-y-2">
               {[1, 2].map((i) => <div key={i} className="h-10 bg-muted animate-pulse rounded-lg" />)}
@@ -133,8 +157,16 @@ function TeamCard() {
           ) : (
             <div className="divide-y divide-border rounded-lg border">
               {(members ?? []).map((m) => (
-                <div key={m.id} className="flex items-center justify-between px-3 py-2.5">
-                  <div className="min-w-0">
+                <div key={m.id} className="flex items-center gap-3 px-3 py-2.5">
+                  <div className="w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-semibold shrink-0">
+                    {(m.name ?? m.email ?? "?")
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")
+                      .toUpperCase()
+                      .slice(0, 2)}
+                  </div>
+                  <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium truncate">{m.name ?? "—"}</p>
                     <p className="text-xs text-muted-foreground truncate">{m.email ?? "—"}</p>
                   </div>
