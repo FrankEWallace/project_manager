@@ -34,17 +34,13 @@ export const auth = betterAuth({
           const name = `${user.name}'s Workspace`;
           const slug = slugify(name);
 
-          const [workspace] = await db.insert(workspaces).values({
-            name,
-            slug,
-            baseCurrency: "USD",
-          }).returning();
+          const [workspace] = await (db.insert(workspaces).values({ name, slug } as any).returning());
 
-          await db.insert(workspaceMembers).values({
+          await (db.insert(workspaceMembers).values({
             workspaceId: workspace!.id,
             userId: user.id,
             role: "owner",
-          });
+          } as any));
         },
       },
     },
