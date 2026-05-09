@@ -2,7 +2,6 @@ import { betterAuth } from "better-auth";
 import { bearer } from "better-auth/plugins";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db, workspaces, workspaceMembers, authUser, authSession, authAccount, authVerification } from "@repo/db";
-import { createId } from "@paralleldrive/cuid2";
 
 function slugify(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -36,14 +35,12 @@ export const auth = betterAuth({
           const slug = slugify(name);
 
           const [workspace] = await db.insert(workspaces).values({
-            id: createId(),
             name,
             slug,
             baseCurrency: "USD",
           }).returning();
 
           await db.insert(workspaceMembers).values({
-            id: createId(),
             workspaceId: workspace!.id,
             userId: user.id,
             role: "owner",
