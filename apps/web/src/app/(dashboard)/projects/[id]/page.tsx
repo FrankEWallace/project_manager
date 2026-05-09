@@ -20,7 +20,7 @@ import { formatCurrency, formatDate, formatPercent } from "@/lib/utils";
 import {
   ArrowLeft, TrendingUp, TrendingDown, Clock, CheckCircle2, Circle,
   Plus, Layers, Pencil, Trash2, User, Building2, Mail, Phone,
-  UserPlus, MoreHorizontal,
+  UserPlus, MoreHorizontal, CheckSquare, Square,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -867,6 +867,244 @@ function ActorsTab({ projectId }: { projectId: string }) {
   );
 }
 
+// ─── Tasks Tab ────────────────────────────────────────────────────────────────
+
+interface Task {
+  id: string;
+  title: string;
+  description: string | null;
+  status: "todo" | "in_progress" | "done" | "cancelled";
+  dueDate: string | null;
+  milestoneId: string | null;
+  phaseId: string | null;
+  milestoneName: string | null;
+  phaseName: string | null;
+  createdAt: string;
+}
+
+const TASK_STATUS_OPTIONS = ["todo", "in_progress", "done", "cancelled"] as const;
+
+const taskStatusColors: Record<string, string> = {
+  todo: "text-muted-foreground",
+  in_progress: "text-blue-600",
+  done: "text-green-600",
+  cancelled: "text-muted-foreground line-through",
+};
+
+function TasksTab({ projectId, phases }: { projectId: string; phases: Phase[] | null }) {
+  const { data: tasks, loading, refetch } = useApi<Task[]>(`/api/projects/${projectId}/tasks`);
+  const { mutate: createTask, loading: creating } = useMutation<object, Task>(`/api/projects/${projectId}/tasks`);
+
+  const { data: session } = useSession();
+  const token = session?.session?.token;
+  const workspaceId = getWorkspaceId();
+
+  const [filter, setFilter] = useState<"all" | "todo" | "in_progress" | "done">("all");
+  const [addOpen, setAddOpen] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
+  const [newPhaseId, setNewPhaseId] = useState("");
+  const [newMilestoneId, setNewMilestoneId] = useState("");
+  const [newDueDate, setNewDueDate] = useState("");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const milestonesForPhase = phases?.find((p) => p.id === newPhaseId)?.milestones ?? [];
+
+  const filtered = (tasks ?? []).filter((t) => filter === "all" || t.status === filter);
+
+  async function handleAdd(e: React.FormEvent) {
+    e.preventDefault();
+    const result = await createTask({
+      title: newTitle,
+      phaseId: newPhaseId || undefined,
+      milestoneId: newMilestoneId || undefined,
+      dueDate: newDueDate ? new Date(newDueDate).toISOString() : undefined,
+    });
+    if (result) {
+      setNewTitle(""); setNewPhaseId(""); setNewMilestoneId(""); setNewDueDate("");
+      setAddOpen(false);
+      refetch();
+    }
+  }
+
+  async function handleToggle(task: Task) {
+    if (!token || !workspaceId) return;
+    const next = task.status === "done" ? "todo" : "done";
+    await apiRequest(`/api/projects/${projectId}/tasks/${task.id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status: next }),
+      token, workspaceId,
+    });
+    refetch();
+  }
+
+  async function handleDelete(taskId: string) {
+    if (!token || !workspaceId) return;
+    setDeletingId(taskId);
+    try {
+      await apiRequest(`/api/projects/${projectId}/tasks/${taskId}`, { method: "DELETE", token, workspaceId });
+      refetch();
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
+  const counts = {
+    all: (tasks ?? []).length,
+    todo: (tasks ?? []).filter((t) => t.status === "todo").length,
+    in_progress: (tasks ?? []).filter((t) => t.status === "in_progress").length,
+    done: (tasks ?? []).filter((t) => t.status === "done").length,
+  };
+
+  return (
+    <div className="space-y-4 pt-4">
+      {/* Toolbar */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex gap-1">
+          {(["all", "todo", "in_progress", "done"] as const).map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                filter === f
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+              }`}
+            >
+              {f === "all" ? "All" : f.replace("_", " ")}
+              <span className="ml-1.5 opacity-60">{counts[f]}</span>
+            </button>
+          ))}
+        </div>
+        <Button size="sm" onClick={() => setAddOpen(true)}>
+          <Plus className="h-3.5 w-3.5 mr-1" /> Add task
+        </Button>
+      </div>
+
+      {/* Task list */}
+      {loading ? (
+        <div className="space-y-2">
+          {[1, 2, 3].map((i) => <div key={i} className="h-12 bg-muted animate-pulse rounded-lg" />)}
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <CheckSquare className="h-8 w-8 text-muted-foreground/40 mb-3" />
+          <p className="text-sm text-muted-foreground">
+            {filter === "all" ? "No tasks yet. Add one to get started." : `No ${filter.replace("_", " ")} tasks.`}
+          </p>
+        </div>
+      ) : (
+        <div className="divide-y divide-border rounded-lg border">
+          {filtered.map((task) => (
+            <div key={task.id} className="flex items-center gap-3 px-4 py-3 group">
+              <button
+                onClick={() => handleToggle(task)}
+                className="shrink-0 text-muted-foreground hover:text-primary transition-colors"
+              >
+                {task.status === "done"
+                  ? <CheckSquare className="h-4 w-4 text-green-600" />
+                  : <Square className="h-4 w-4" />}
+              </button>
+              <div className="flex-1 min-w-0">
+                <p className={`text-sm font-medium truncate ${taskStatusColors[task.status]}`}>
+                  {task.title}
+                </p>
+                <div className="flex gap-2 mt-0.5 flex-wrap">
+                  {task.phaseName && (
+                    <span className="text-xs text-muted-foreground">{task.phaseName}</span>
+                  )}
+                  {task.milestoneName && (
+                    <span className="text-xs text-muted-foreground">· {task.milestoneName}</span>
+                  )}
+                  {task.dueDate && (
+                    <span className="text-xs text-muted-foreground">
+                      · due {formatDate(task.dueDate)}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Select
+                  value={task.status}
+                  onValueChange={async (v) => {
+                    if (!token || !workspaceId) return;
+                    await apiRequest(`/api/projects/${projectId}/tasks/${task.id}`, {
+                      method: "PATCH",
+                      body: JSON.stringify({ status: v }),
+                      token, workspaceId,
+                    });
+                    refetch();
+                  }}
+                >
+                  <SelectTrigger className="h-7 w-28 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TASK_STATUS_OPTIONS.map((s) => (
+                      <SelectItem key={s} value={s} className="text-xs">{s.replace("_", " ")}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+                  disabled={deletingId === task.id}
+                  onClick={() => handleDelete(task.id)}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Add task dialog */}
+      <Dialog open={addOpen} onOpenChange={setAddOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader><DialogTitle>Add task</DialogTitle></DialogHeader>
+          <form onSubmit={handleAdd} className="space-y-4 pt-1">
+            <div className="space-y-1.5">
+              <Label>Title</Label>
+              <Input value={newTitle} onChange={(e) => setNewTitle(e.target.value)} required placeholder="Task title" autoFocus />
+            </div>
+            {phases && phases.length > 0 && (
+              <div className="space-y-1.5">
+                <Label>Phase (optional)</Label>
+                <Select value={newPhaseId} onValueChange={(v) => { setNewPhaseId(v); setNewMilestoneId(""); }}>
+                  <SelectTrigger><SelectValue placeholder="No phase" /></SelectTrigger>
+                  <SelectContent>
+                    {phases.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            {milestonesForPhase.length > 0 && (
+              <div className="space-y-1.5">
+                <Label>Milestone (optional)</Label>
+                <Select value={newMilestoneId} onValueChange={setNewMilestoneId}>
+                  <SelectTrigger><SelectValue placeholder="No milestone" /></SelectTrigger>
+                  <SelectContent>
+                    {milestonesForPhase.map((m) => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            <div className="space-y-1.5">
+              <Label>Due date (optional)</Label>
+              <Input type="date" value={newDueDate} onChange={(e) => setNewDueDate(e.target.value)} />
+            </div>
+            <DialogFooter>
+              <Button variant="outline" type="button" onClick={() => setAddOpen(false)}>Cancel</Button>
+              <Button type="submit" disabled={creating}>{creating ? "Adding…" : "Add task"}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -933,6 +1171,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
       <Tabs defaultValue="overview">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="tasks">Tasks</TabsTrigger>
           <TabsTrigger value="financials">Financials</TabsTrigger>
           <TabsTrigger value="actors">Actors</TabsTrigger>
         </TabsList>
@@ -945,6 +1184,10 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
             projectId={id}
             onRefresh={onRefresh}
           />
+        </TabsContent>
+
+        <TabsContent value="tasks">
+          <TasksTab projectId={id} phases={phases} />
         </TabsContent>
 
         <TabsContent value="financials">

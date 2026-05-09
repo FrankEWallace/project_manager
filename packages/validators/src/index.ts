@@ -112,6 +112,22 @@ export const updateWorkspaceSchema = z.object({
   baseCurrency: z.string().length(3).optional(),
 });
 
+// ─── Task ─────────────────────────────────────────────────────────────────────
+
+const taskStatuses = ["todo", "in_progress", "done", "cancelled"] as const;
+
+export const createTaskSchema = z.object({
+  title: z.string().min(1).max(200),
+  description: z.string().optional(),
+  status: z.enum(taskStatuses).default("todo"),
+  milestoneId: z.string().optional(),
+  phaseId: z.string().optional(),
+  dueDate: z.string().datetime().optional(),
+  order: z.number().int().min(0).default(0),
+});
+
+export const updateTaskSchema = createTaskSchema.partial();
+
 // ─── Invitation ───────────────────────────────────────────────────────────────
 
 export const inviteUserSchema = z.object({

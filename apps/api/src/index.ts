@@ -13,6 +13,7 @@ import { workspacesRouter } from "./routes/workspaces.ts";
 import { actorsRouter } from "./routes/actors.ts";
 import { projectActorsRouter } from "./routes/projectActors.ts";
 import { invitationsRouter } from "./routes/invitations.ts";
+import { tasksRouter } from "./routes/tasks.ts";
 
 const app = new Hono();
 
@@ -40,6 +41,7 @@ app.route("/api/actors", actorsRouter);
 app.route("/api/projects", projectActorsRouter);
 app.route("/api", transactionsRouter);
 app.route("/api/invitations", invitationsRouter);
+app.route("/api/projects", tasksRouter);
 
 const port = Number(process.env["PORT"] ?? 3001);
 console.log(`API running on http://localhost:${port}`);

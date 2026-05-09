@@ -3,7 +3,10 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
+import { getWorkspaceId, setWorkspaceId } from "@/lib/workspace";
 import { Sidebar } from "@/components/sidebar";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -14,6 +17,25 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       router.replace("/sign-in");
     }
   }, [session, isPending, router]);
+
+  // Bootstrap workspaceId into localStorage if missing
+  useEffect(() => {
+    if (!session?.session?.token) return;
+    if (getWorkspaceId()) return;
+    fetch(`${API_URL}/api/workspaces/me`, {
+      headers: { Authorization: `Bearer ${session.session.token}` },
+    })
+      .then((r) => r.json())
+      .then((body) => {
+        const memberships = body?.data as { workspaceId: string }[] | undefined;
+        if (memberships?.[0]?.workspaceId) {
+          setWorkspaceId(memberships[0].workspaceId);
+          // force re-render so hooks pick up the new value
+          router.refresh();
+        }
+      })
+      .catch(() => {});
+  }, [session?.session?.token, router]);
 
   if (isPending) {
     return (
