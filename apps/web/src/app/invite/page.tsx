@@ -19,7 +19,7 @@ interface InviteInfo {
   expiresAt: string;
 }
 
-export default function InvitePage() {
+function InvitePageInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const token = searchParams.get("token");
@@ -116,7 +116,7 @@ export default function InvitePage() {
     );
   }
 
-  // ─── Main invite card ────────────────────────────────────────────────────
+  // ─── Main invite card ─────────────────────────────────────────────────────
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-sm">
@@ -176,5 +176,19 @@ export default function InvitePage() {
         </CardFooter>
       </Card>
     </div>
+  );
+}
+
+export default function InvitePage() {
+  return (
+    <React.Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      }
+    >
+      <InvitePageInner />
+    </React.Suspense>
   );
 }
