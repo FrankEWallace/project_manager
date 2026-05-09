@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, FolderKanban, Users, BarChart3, Wallet, CalendarDays, Settings, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -37,9 +38,12 @@ export function Sidebar() {
 
   return (
     <aside className="w-60 flex flex-col border-r bg-card h-screen sticky top-0">
-      <div className="px-4 py-5">
-        <h1 className="font-semibold text-foreground text-sm tracking-tight">Project Manager</h1>
-        <p className="text-xs text-muted-foreground mt-0.5">Operational platform</p>
+      <div className="px-4 py-5 flex items-center gap-3">
+        <Image src="/logo.jpg" alt="Logo" width={32} height={32} className="rounded-md shrink-0" />
+        <div>
+          <h1 className="font-semibold text-foreground text-sm tracking-tight">Project Manager</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">Operational platform</p>
+        </div>
       </div>
 
       <Separator />
