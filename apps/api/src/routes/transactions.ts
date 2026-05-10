@@ -54,7 +54,7 @@ export const transactionsRouter = new Hono()
       receiptUrl: body.receiptUrl,
       notes: body.notes,
       createdBy: userId,
-    }).returning();
+    } as any).returning();
 
     await writeAuditLog({
       workspaceId,

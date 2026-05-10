@@ -68,7 +68,7 @@ export const tasksRouter = new Hono()
         phaseId: body.phaseId ?? null,
         dueDate: body.dueDate ? new Date(body.dueDate) : null,
         createdBy: userId,
-      })
+      } as any)
       .returning();
 
     await writeAuditLog({
@@ -99,7 +99,7 @@ export const tasksRouter = new Hono()
     const [updated] = await db
       .update(tasks)
       .set({
-        ...(body.title !== undefined && { title: body.title }),
+        ...(body.title !== undefined && { title: body.title } as any),
         ...(body.description !== undefined && { description: body.description }),
         ...(body.status !== undefined && { status: body.status }),
         ...(body.milestoneId !== undefined && { milestoneId: body.milestoneId }),
@@ -107,7 +107,7 @@ export const tasksRouter = new Hono()
         ...(body.dueDate !== undefined && { dueDate: body.dueDate ? new Date(body.dueDate) : null }),
         ...(body.status !== undefined && { completedAt: isDone && !wasDone ? new Date() : wasDone && !isDone ? null : undefined }),
         updatedAt: new Date(),
-      })
+      } as any)
       .where(eq(tasks.id, taskId))
       .returning();
 

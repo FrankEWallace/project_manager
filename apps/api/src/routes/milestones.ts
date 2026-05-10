@@ -36,7 +36,7 @@ export const milestonesRouter = new Hono()
       order: body.order,
       dueDate: body.dueDate ? new Date(body.dueDate) : null,
       assignedTo: body.assignedTo,
-    }).returning();
+    } as any).returning();
 
     await writeAuditLog({
       workspaceId, userId,
@@ -69,7 +69,7 @@ export const milestonesRouter = new Hono()
         dueDate: body.dueDate ? new Date(body.dueDate) : undefined,
         assignedTo: body.assignedTo,
         updatedAt: new Date(),
-      })
+      } as any)
       .where(eq(milestones.id, milestoneId))
       .returning();
 
@@ -96,7 +96,7 @@ export const milestonesRouter = new Hono()
         status: newStatus,
         completedAt: newStatus === "completed" ? new Date() : null,
         updatedAt: new Date(),
-      })
+      } as any)
       .where(eq(milestones.id, milestoneId))
       .returning();
 

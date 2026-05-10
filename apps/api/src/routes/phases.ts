@@ -57,7 +57,7 @@ export const phasesRouter = new Hono()
       order: body.order,
       startDate: body.startDate ? new Date(body.startDate) : null,
       dueDate: body.dueDate ? new Date(body.dueDate) : null,
-    }).returning();
+    } as any).returning();
 
     await writeAuditLog({
       workspaceId, userId,
@@ -90,7 +90,7 @@ export const phasesRouter = new Hono()
         startDate: body.startDate ? new Date(body.startDate) : undefined,
         dueDate: body.dueDate ? new Date(body.dueDate) : undefined,
         updatedAt: new Date(),
-      })
+      } as any)
       .where(eq(phases.id, phaseId))
       .returning();
 
@@ -112,7 +112,7 @@ export const phasesRouter = new Hono()
 
     const [updated] = await db
       .update(phases)
-      .set({ status: "completed", completedAt: new Date(), updatedAt: new Date() })
+      .set({ status: "completed", completedAt: new Date(), updatedAt: new Date() } as any)
       .where(and(eq(phases.id, phaseId), eq(phases.projectId, projectId)))
       .returning();
 
@@ -136,7 +136,7 @@ export const phasesRouter = new Hono()
 
     const [updated] = await db
       .update(phases)
-      .set({ status: "active", completedAt: null, updatedAt: new Date() })
+      .set({ status: "active", completedAt: null, updatedAt: new Date() } as any)
       .where(and(eq(phases.id, phaseId), eq(phases.projectId, projectId)))
       .returning();
 

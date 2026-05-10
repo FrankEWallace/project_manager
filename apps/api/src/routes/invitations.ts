@@ -67,7 +67,7 @@ export const invitationsRouter = new Hono()
 
     const [invite] = await db
       .insert(invitations)
-      .values({ id: createId(), workspaceId, email, role, token, invitedBy: userId, expiresAt })
+      .values({ id: createId(), workspaceId, email, role, token, invitedBy: userId, expiresAt } as any)
       .returning();
 
     const workspace = await db.query.workspaces.findFirst({
@@ -170,12 +170,12 @@ export const invitationsRouter = new Hono()
         workspaceId: invite.workspaceId,
         userId: session.user.id,
         role: invite.role,
-      })
+      } as any)
       .returning();
 
     await db
       .update(invitations)
-      .set({ acceptedAt: new Date() })
+      .set({ acceptedAt: new Date() } as any)
       .where(eq(invitations.id, invite.id));
 
     return c.json({ data: { workspaceId: invite.workspaceId, member } });

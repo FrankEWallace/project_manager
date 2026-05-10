@@ -42,7 +42,7 @@ export const workspacesRouter = new Hono()
         ...(body.name ? { name: body.name } : {}),
         ...(body.baseCurrency ? { baseCurrency: body.baseCurrency as CurrencyCode } : {}),
         updatedAt: new Date(),
-      })
+      } as any)
       .where(eq(workspaces.id, workspaceId))
       .returning();
 

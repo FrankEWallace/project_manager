@@ -50,7 +50,7 @@ export const projectActorsRouter = new Hono()
       projectId,
       actorId: body.actorId,
       role: body.role ?? null,
-    }).returning();
+    } as any).returning();
 
     await writeAuditLog({
       workspaceId, userId,

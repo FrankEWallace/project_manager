@@ -32,7 +32,7 @@ export const actorsRouter = new Hono()
       type: body.type,
       company: body.company,
       notes: body.notes,
-    }).returning();
+    } as any).returning();
 
     await writeAuditLog({
       workspaceId,
@@ -69,7 +69,7 @@ export const actorsRouter = new Hono()
     if (!existing) return c.json({ error: "Not found" }, 404);
 
     const [updated] = await db.update(actors)
-      .set({ ...body, updatedAt: new Date() })
+      .set({ ...body, updatedAt: new Date() } as any)
       .where(eq(actors.id, id))
       .returning();
 
