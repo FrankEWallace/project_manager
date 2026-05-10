@@ -1,0 +1,212 @@
+---
+title: Analytics
+description: Portfolio and workspace-level analytics endpoints.
+---
+
+## Endpoints
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/analytics/portfolio` | Portfolio summary — totals, status breakdown, overdue count |
+| `GET` | `/api/analytics/by-category` | Project count and financials grouped by category |
+| `GET` | `/api/analytics/milestones-summary` | Workspace-wide milestone completion rate |
+| `GET` | `/api/analytics/top-spending` | Top projects by expense total |
+| `GET` | `/api/analytics/revenue-by-project` | Top projects by income with % share |
+| `GET` | `/api/analytics/trends` | Current vs. previous month KPIs |
+| `GET` | `/api/analytics/upcoming-payments` | Future-dated transactions |
+| `GET` | `/api/analytics/income-expense-over-time` | Time series of income vs. expenses |
+| `GET` | `/api/analytics/transactions` | Paginated full transaction list across all projects |
+
+---
+
+## Portfolio Summary
+
+```
+GET /api/analytics/portfolio
+```
+
+**Response:**
+```json
+{
+  "data": {
+    "totalProjects": 12,
+    "overdue": 2,
+    "statusBreakdown": [
+      { "status": "active", "count": 5 },
+      { "status": "completed", "count": 4 },
+      { "status": "draft", "count": 2 },
+      { "status": "on_hold", "count": 1 }
+    ],
+    "financials": {
+      "totalIncome": 48000,
+      "totalExpenses": 12000,
+      "profit": 36000
+    }
+  }
+}
+```
+
+---
+
+## By Category
+
+```
+GET /api/analytics/by-category
+```
+
+Groups projects and financial totals by `category_id`. Categories with `null` IDs represent uncategorized projects.
+
+**Response:**
+```json
+{
+  "data": [
+    {
+      "categoryId": "01J...",
+      "count": 4,
+      "totalIncome": "24000",
+      "totalExpenses": "6000"
+    }
+  ]
+}
+```
+
+---
+
+## Milestones Summary
+
+```
+GET /api/analytics/milestones-summary
+```
+
+**Response:**
+```json
+{
+  "data": {
+    "total": 48,
+    "completed": 31,
+    "completionRate": 65
+  }
+}
+```
+
+---
+
+## Top Spending
+
+```
+GET /api/analytics/top-spending?limit=5
+```
+
+**Query parameters:**
+
+| Param | Default | Description |
+|---|---|---|
+| `limit` | `5` | Number of projects to return |
+
+**Response:**
+```json
+{
+  "data": [
+    { "projectId": "01J...", "projectName": "Agency Retainer", "totalExpenses": "8400" }
+  ]
+}
+```
+
+---
+
+## Revenue by Project
+
+```
+GET /api/analytics/revenue-by-project?limit=5
+```
+
+Returns top income-generating projects with a `share` percentage of total income.
+
+**Response:**
+```json
+{
+  "data": [
+    {
+      "projectId": "01J...",
+      "projectName": "SaaS MVP",
+      "totalIncome": 18000,
+      "share": 38
+    }
+  ]
+}
+```
+
+---
+
+## Trends
+
+```
+GET /api/analytics/trends
+```
+
+Compares the current calendar month to the previous month for KPI delta badges.
+
+**Response:**
+```json
+{
+  "data": {
+    "income":   { "current": 12000, "previous": 9000,  "pct": 33  },
+    "expenses": { "current": 3200,  "previous": 4100,  "pct": -22 },
+    "profit":   { "current": 8800,  "previous": 4900,  "pct": 80  },
+    "activeProjects": { "current": 5, "previous": 4, "pct": 25 }
+  }
+}
+```
+
+`pct` is `null` when the previous period had zero value (division by zero).
+
+---
+
+## Upcoming Payments
+
+```
+GET /api/analytics/upcoming-payments?limit=5
+```
+
+Returns future-dated transactions ordered by date ascending.
+
+---
+
+## Income vs. Expense Over Time
+
+```
+GET /api/analytics/income-expense-over-time?period=monthly
+```
+
+**Query parameters:**
+
+| Param | Values | Default | Description |
+|---|---|---|---|
+| `period` | `monthly`, `quarterly`, `yearly` | `monthly` | Aggregation granularity |
+
+Returns up to 12 months, 8 quarters, or 5 years — in ascending date order.
+
+**Response:**
+```json
+{
+  "data": [
+    { "period": "2026-04-01", "income": 9000,  "expenses": 4100 },
+    { "period": "2026-05-01", "income": 12000, "expenses": 3200 }
+  ]
+}
+```
+
+---
+
+## All Transactions (Paginated)
+
+```
+GET /api/analytics/transactions?limit=50&offset=0
+```
+
+Returns transactions across all workspace projects, ordered by date descending. Use for the finances page table view.
+
+| Param | Default |
+|---|---|
+| `limit` | `50` |
+| `offset` | `0` |

@@ -1,0 +1,76 @@
+---
+title: Introduction
+description: A personal operational OS for solo developers that scales to full teams.
+---
+
+## What is Project Manager?
+
+Project Manager is not a generic task tracker. It is a **personal project operating system** — a single workspace that combines project lifecycle management, financial tracking, and analytics for solo freelancers and small teams.
+
+<CardGroup cols={2}>
+  <Card title="Projects & Hierarchy" icon="folder-tree">
+    Projects → Phases → Milestones → Tasks. Progress is fully computed — no manual input.
+  </Card>
+  <Card title="Financial Tracking" icon="chart-line">
+    Income and expense records per project. Budget vs. actual with profit/loss reporting.
+  </Card>
+  <Card title="Analytics Dashboard" icon="chart-bar">
+    Portfolio and per-project views. Trends, category breakdowns, and milestone completion rates.
+  </Card>
+  <Card title="Actors & Teams" icon="users">
+    Workspace-level directory of clients, collaborators, vendors, and advisors.
+  </Card>
+</CardGroup>
+
+---
+
+## Scale Model
+
+| Mode | Trigger | Behavior |
+|---|---|---|
+| Solo | No invitations sent or accepted | Full access, single user |
+| Team | First invitation accepted | Team mode activates, roles enforced |
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | Next.js 15 (App Router), Tailwind CSS v4, shadcn/ui |
+| Backend API | Hono (Node.js, TypeScript) |
+| Database | PostgreSQL (Neon) via Drizzle ORM |
+| Auth | Better Auth — magic link or email+password |
+| Email | Resend — invitation emails |
+| Monorepo | Turborepo + pnpm workspaces |
+| IDs | ULID — sortable, URL-safe, UUID-compatible |
+
+---
+
+## Monorepo Layout
+
+```
+apps/
+  web/        → Next.js frontend (port 3000)
+  api/        → Hono REST API (port 3001)
+packages/
+  db/         → Drizzle schema + migrations
+  auth/       → Better Auth shared config
+  ui/         → Shared component library
+  validators/ → Zod schemas used by both apps
+```
+
+---
+
+## v1 Scope
+
+The current release ships:
+
+- Full project + phase + milestone lifecycle
+- Financial tracker (income/expense per project)
+- Analytics — portfolio and per-project views
+- Workspace actor directory
+- User auth + team invite flow
+- Audit log (backend, no UI)
+
+<Note>Tasks exist in the database schema but are hidden in the v1 UI. The full task surface ships in v2.</Note>

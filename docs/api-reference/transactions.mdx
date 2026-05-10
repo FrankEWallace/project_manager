@@ -1,0 +1,95 @@
+---
+title: Transactions
+description: Record income and expenses against projects.
+---
+
+## Endpoints
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/projects/:projectId/transactions` | List transactions for a project |
+| `POST` | `/api/projects/:projectId/transactions` | Create a transaction |
+| `DELETE` | `/api/projects/:projectId/transactions/:id` | Delete a transaction |
+
+---
+
+## Financial Model
+
+- **Project** is the primary financial container. Every transaction belongs to exactly one project.
+- **Phase and milestone** are optional metadata — they don't affect aggregation, they add context.
+- **`normalized_amount`** is the amount in the workspace's base currency. In v1 this is entered manually by the user. Exchange rate conversion ships in v2.
+- **`amount`** is the original transaction amount (may be in a different currency).
+
+---
+
+## List Transactions
+
+```
+GET /api/projects/:projectId/transactions
+```
+
+Returns transactions ordered by date descending, with the linked actor's name included.
+
+**Response:**
+```json
+{
+  "data": [
+    {
+      "id": "01J...",
+      "type": "income",
+      "category": "Consulting",
+      "description": "Phase 1 milestone payment",
+      "amount": "2500.00",
+      "currency": "USD",
+      "normalized_amount": "2500.00",
+      "workspace_currency": "USD",
+      "date": "2026-05-10",
+      "actor": { "id": "...", "name": "ACME Corp", "type": "client" }
+    }
+  ]
+}
+```
+
+---
+
+## Create Transaction
+
+```
+POST /api/projects/:projectId/transactions
+```
+
+**Request body:**
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `type` | string | Yes | `income` or `expense` |
+| `amount` | number | Yes | Original transaction amount |
+| `currency` | string | Yes | ISO 4217, e.g. `USD` |
+| `normalizedAmount` | number | Yes | Amount in workspace base currency |
+| `date` | ISO date string | Yes | Can be future-dated for upcoming payments |
+| `category` | string | No | User-defined label |
+| `description` | string | No | |
+| `notes` | string | No | |
+| `actorId` | ULID | No | Counterparty from the actors directory |
+| `phaseId` | ULID | No | Optional phase context |
+| `milestoneId` | ULID | No | Optional milestone context |
+| `receiptUrl` | string | No | External URL to a receipt or invoice |
+
+**Response:** `201` with the created transaction.
+
+---
+
+## Delete Transaction
+
+```
+DELETE /api/projects/:projectId/transactions/:id
+```
+
+Permanently deletes the transaction and logs a `deleted` audit event with the full record snapshot in `diff.before`.
+
+**Response:**
+```json
+{ "success": true }
+```
+
+<Note>There is no update (PATCH) endpoint for transactions in v1. To correct an entry, delete it and create a new one.</Note>

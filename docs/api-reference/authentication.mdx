@@ -1,0 +1,61 @@
+---
+title: Authentication
+description: Session-based auth via Better Auth — cookies, routes, and the session context.
+---
+
+## How It Works
+
+Authentication uses **Better Auth** with HTTP-only session cookies. There are no API keys or JWT tokens to manage for the web app — the cookie is set on login and sent automatically by the browser.
+
+---
+
+## Auth Routes
+
+Better Auth mounts its own route handlers at `/api/auth/*`. These are handled by the Better Auth library directly — they are not custom Hono routes.
+
+| Route | Method | Description |
+|---|---|---|
+| `/api/auth/sign-in/email` | POST | Sign in with email + password |
+| `/api/auth/sign-in/magic-link` | POST | Request a magic link |
+| `/api/auth/sign-out` | POST | Clear the session cookie |
+| `/api/auth/session` | GET | Get the current session |
+
+---
+
+## Session Context
+
+After `requireAuth` runs, the Hono context exposes:
+
+```ts
+const { userId, workspaceId, role } = c.get("auth");
+```
+
+| Field | Type | Description |
+|---|---|---|
+| `userId` | ULID | The authenticated user's ID |
+| `workspaceId` | ULID | The active workspace (from session) |
+| `role` | `owner \| admin \| member` | The user's role in the workspace |
+
+---
+
+## Protecting Routes
+
+```ts
+import { requireAuth, requireRole } from "../middleware/auth.ts";
+
+// All routes in this router require auth
+const router = new Hono().use(requireAuth)
+
+// Admin-only action within a protected router
+router.post("/:id/archive", requireRole("admin", "owner"), async (c) => { ... })
+```
+
+---
+
+## Error Responses
+
+| Scenario | Status | Body |
+|---|---|---|
+| No session cookie | `401` | `{ "error": "Unauthorized" }` |
+| Valid session, wrong role | `403` | `{ "error": "Forbidden" }` |
+| Session expired | `401` | `{ "error": "Unauthorized" }` |

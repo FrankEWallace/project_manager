@@ -1,0 +1,101 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "Project Manager",
+  "colors": {
+    "primary": "#6366f1",
+    "light": "#818cf8",
+    "dark": "#4338ca"
+  },
+  "favicon": "/favicon.ico",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "introduction",
+              "getting-started/installation",
+              "getting-started/environment"
+            ]
+          },
+          {
+            "group": "Architecture",
+            "pages": [
+              "architecture/overview",
+              "architecture/data-model",
+              "architecture/auth",
+              "architecture/audit-log"
+            ]
+          },
+          {
+            "group": "Deployment",
+            "pages": [
+              "deployment/overview",
+              "deployment/environment-checklist"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Core",
+            "pages": [
+              "api-reference/overview",
+              "api-reference/authentication"
+            ]
+          },
+          {
+            "group": "Projects",
+            "pages": [
+              "api-reference/projects",
+              "api-reference/phases",
+              "api-reference/milestones"
+            ]
+          },
+          {
+            "group": "Finances",
+            "pages": [
+              "api-reference/transactions"
+            ]
+          },
+          {
+            "group": "People",
+            "pages": [
+              "api-reference/actors",
+              "api-reference/workspaces",
+              "api-reference/invitations"
+            ]
+          },
+          {
+            "group": "Analytics",
+            "pages": [
+              "api-reference/analytics"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg"
+  },
+  "topbar": {
+    "links": [
+      {
+        "name": "GitHub",
+        "url": "https://github.com/FrankEWallace/project-manager"
+      }
+    ]
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/FrankEWallace"
+    }
+  }
+}

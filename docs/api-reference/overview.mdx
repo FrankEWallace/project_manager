@@ -1,0 +1,87 @@
+---
+title: API Overview
+description: The Hono REST API — base URL, conventions, and response format.
+---
+
+## Base URL
+
+| Environment | URL |
+|---|---|
+| Local | `http://localhost:3001` |
+| Production | Your Railway deployment URL |
+
+---
+
+## Authentication
+
+All API routes require a valid session cookie set by Better Auth. Log in via the web app first — the cookie is automatically sent with every request from the same browser.
+
+For server-to-server requests, pass the session token in the `Cookie` header:
+
+```
+Cookie: better-auth.session_token=<token>
+```
+
+See [Authentication](/api-reference/authentication) for details.
+
+---
+
+## Response Format
+
+All responses follow a consistent envelope:
+
+**Success**
+```json
+{
+  "data": { ... }
+}
+```
+
+**Created (201)**
+```json
+{
+  "data": { "id": "...", ... }
+}
+```
+
+**Error**
+```json
+{
+  "error": "Not found"
+}
+```
+
+---
+
+## Status Codes
+
+| Code | Meaning |
+|---|---|
+| `200` | Success |
+| `201` | Resource created |
+| `400` | Validation error (Zod) |
+| `401` | No valid session |
+| `403` | Insufficient role |
+| `404` | Resource not found or not in your workspace |
+| `500` | Server error |
+
+---
+
+## Route Prefixes
+
+| Prefix | Resource |
+|---|---|
+| `/api/projects` | Projects |
+| `/api/projects/:id/phases` | Phases |
+| `/api/projects/:id/phases/:phaseId/milestones` | Milestones |
+| `/api/projects/:id/transactions` | Project transactions |
+| `/api/actors` | Workspace actors (people/orgs) |
+| `/api/workspaces` | Workspace settings |
+| `/api/invitations` | Team invitations |
+| `/api/analytics/*` | Analytics endpoints |
+
+---
+
+## Workspace Isolation
+
+Every request is scoped to the authenticated user's workspace. You cannot access another workspace's resources even if you know the resource ID. Attempts return `404` — not `403` — to avoid leaking information about the existence of other workspaces' data.

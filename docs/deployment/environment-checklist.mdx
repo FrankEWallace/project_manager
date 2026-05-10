@@ -1,0 +1,53 @@
+---
+title: Production Checklist
+description: Everything to verify before going live.
+---
+
+<Steps>
+  <Step title="Generate a strong BETTER_AUTH_SECRET">
+    ```bash
+    openssl rand -base64 32
+    ```
+    Store the output in Railway's environment variables. Never reuse your dev secret.
+  </Step>
+
+  <Step title="Configure WEB_URL on the API">
+    Must match the exact origin of the deployed web app, e.g. `https://app.yourproject.com`.
+    CORS will block requests from any other origin.
+  </Step>
+
+  <Step title="Configure NEXT_PUBLIC_API_URL on the web app">
+    Must be the public HTTPS URL of the Railway deployment, e.g. `https://api.yourproject.com`.
+  </Step>
+
+  <Step title="Run database migrations">
+    ```bash
+    DATABASE_URL=postgresql://... pnpm db:migrate
+    ```
+    Run this from the repo root. It picks up the production `DATABASE_URL` and applies all pending migrations.
+  </Step>
+
+  <Step title="Verify Resend domain">
+    In the Resend dashboard, confirm the sending domain is verified. Invitation emails will silently fail otherwise.
+  </Step>
+
+  <Step title="Test the invite flow end-to-end">
+    Send a real invitation to a test email address. Confirm the email arrives, the magic link works, and the user lands in the correct workspace with the `member` role.
+  </Step>
+
+  <Step title="Confirm audit log is writing">
+    Create a project on the deployed app and check that a row appears in the `audit_log` table via Neon's query console.
+  </Step>
+</Steps>
+
+---
+
+## Common Issues
+
+| Problem | Likely Cause |
+|---|---|
+| API returns 403 on all requests | `WEB_URL` doesn't match the actual frontend origin |
+| Invitation emails not arriving | Resend domain not verified or wrong `RESEND_API_KEY` |
+| Auth cookie not set | `WEB_URL` mismatch causing cookie domain issues |
+| DB connection refused | Missing `?sslmode=require` in `DATABASE_URL` for Neon |
+| Progress always 0% | No milestones created under the project's phases |

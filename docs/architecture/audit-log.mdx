@@ -1,0 +1,75 @@
+---
+title: Audit Log
+description: Every meaningful write operation is recorded in the audit log.
+---
+
+## Overview
+
+The audit log records every meaningful state change in the system. It is written by the API using `writeAuditLog()` from `apps/api/src/lib/audit.ts` — after every successful write to the database.
+
+In v1, the audit log is **backend-only**. No UI surface exposes it. It is the foundation for future analytics, AI-powered summaries, and activity feeds.
+
+---
+
+## Recorded Events
+
+| Entity | Actions |
+|---|---|
+| `project` | `created`, `updated`, `status_changed`, `archived` |
+| `phase` | `created`, `updated`, `completed`, `reopened`, `deleted` |
+| `milestone` | `created`, `updated`, `completed`, `deleted` |
+| `transaction` | `created`, `deleted` |
+| `actor` | `created`, `updated`, `deleted` |
+| `workspace` | `updated` |
+| `invitation` | `sent`, `accepted`, `cancelled` |
+
+---
+
+## Log Entry Shape
+
+```ts
+{
+  workspaceId: string  // Scope — all queries filter by this
+  userId: string       // Who triggered the action
+  entity: string       // 'project' | 'phase' | 'milestone' | ...
+  entityId: string     // ULID of the affected record
+  action: string       // 'created' | 'updated' | 'status_changed' | ...
+  metadata?: object    // Lightweight context (e.g. { name, projectId })
+  diff?: {             // Present on updates
+    before: object
+    after: object
+  }
+}
+```
+
+---
+
+## Usage in Code
+
+```ts
+await writeAuditLog({
+  workspaceId,
+  userId,
+  entity: "project",
+  entityId: project.id,
+  action: "created",
+  metadata: { name: project.name },
+});
+```
+
+For status changes, the action is automatically chosen:
+
+```ts
+action: body.status && body.status !== existing.status
+  ? "status_changed"
+  : "updated"
+```
+
+---
+
+## Future Uses
+
+- Activity timeline UI (v2)
+- "Who changed what" per project
+- AI-powered weekly summaries
+- Anomaly detection on financial changes

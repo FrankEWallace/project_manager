@@ -1,0 +1,115 @@
+---
+title: Phases
+description: Manage project phases — the second level of the project hierarchy.
+---
+
+## Endpoints
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/projects/:projectId/phases` | List phases for a project |
+| `POST` | `/api/projects/:projectId/phases` | Create a phase |
+| `PATCH` | `/api/projects/:projectId/phases/:phaseId` | Update a phase |
+| `PATCH` | `/api/projects/:projectId/phases/:phaseId/complete` | Mark phase as completed |
+| `PATCH` | `/api/projects/:projectId/phases/:phaseId/reopen` | Reopen a completed phase |
+| `DELETE` | `/api/projects/:projectId/phases/:phaseId` | Delete a phase |
+
+All endpoints verify that `:projectId` belongs to the authenticated user's workspace before proceeding.
+
+---
+
+## List Phases
+
+```
+GET /api/projects/:projectId/phases
+```
+
+Returns phases ordered by `order` then `created_at`, with inline progress metrics.
+
+**Response:**
+```json
+{
+  "data": [
+    {
+      "id": "01J...",
+      "name": "Discovery",
+      "order": 1,
+      "status": "completed",
+      "progress": 100,
+      "milestoneCount": 4,
+      "completedMilestones": 4,
+      "milestones": [ ... ],
+      "start_date": "2026-05-01",
+      "due_date": "2026-05-31",
+      "completed_at": "2026-05-28T12:00:00Z"
+    }
+  ]
+}
+```
+
+`progress` is computed inline: `completedMilestones / milestoneCount × 100`. Returns `0` when there are no milestones.
+
+---
+
+## Create Phase
+
+```
+POST /api/projects/:projectId/phases
+```
+
+**Request body:**
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `name` | string | Yes | |
+| `description` | string | No | |
+| `order` | integer | No | Display sort order |
+| `startDate` | ISO date string | No | |
+| `dueDate` | ISO date string | No | |
+
+**Response:** `201` with the created phase.
+
+---
+
+## Update Phase
+
+```
+PATCH /api/projects/:projectId/phases/:phaseId
+```
+
+All fields optional. Updates name, description, order, and dates. Does not change status — use the `/complete` and `/reopen` sub-routes for status transitions.
+
+---
+
+## Complete Phase
+
+```
+PATCH /api/projects/:projectId/phases/:phaseId/complete
+```
+
+Sets `status = 'completed'` and records `completed_at`. Logs a `completed` audit event.
+
+---
+
+## Reopen Phase
+
+```
+PATCH /api/projects/:projectId/phases/:phaseId/reopen
+```
+
+Sets `status = 'active'` and clears `completed_at`. Logs a `reopened` audit event.
+
+---
+
+## Delete Phase
+
+```
+DELETE /api/projects/:projectId/phases/:phaseId
+```
+
+Permanently deletes the phase. Associated milestones are cascade-deleted at the database level.
+
+**Response:**
+```json
+{ "data": { "id": "01J..." } }
+```

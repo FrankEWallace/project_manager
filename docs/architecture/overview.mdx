@@ -1,0 +1,75 @@
+---
+title: Architecture Overview
+description: How the frontend, API, and database are structured and connected.
+---
+
+## High-Level Diagram
+
+```
+Browser / Next.js (Vercel)
+        │
+        │ HTTP (REST)
+        ▼
+Hono API Server (Railway)
+        │
+        │ Drizzle ORM
+        ▼
+PostgreSQL (Neon)
+```
+
+The web app and API are fully decoupled. The API is a standalone Hono server — not serverless — which means zero cold starts and no platform lock-in. It can be moved to any Docker-compatible host.
+
+---
+
+## Request Flow
+
+1. The Next.js frontend sends REST requests to `NEXT_PUBLIC_API_URL`.
+2. The Hono API validates the session cookie via Better Auth middleware.
+3. The `requireAuth` middleware populates `c.get("auth")` with `{ userId, workspaceId, role }`.
+4. Route handlers query the database using Drizzle and return JSON.
+5. All writes are followed by an audit log entry (`writeAuditLog`).
+
+---
+
+## Monorepo Packages
+
+### `packages/db`
+The single source of truth for the database schema.
+
+- **`src/schema/`** — Drizzle table definitions (projects, phases, milestones, transactions, actors, users, workspace, audit)
+- **`src/relations.ts`** — Drizzle `relations()` definitions enabling `.with()` on queries
+- **`src/client.ts`** — Exports the `db` instance and all schema tables for use by the API
+
+### `packages/auth`
+Shared Better Auth configuration. Both the API (for session verification) and the web app (for login flows) import from here.
+
+### `packages/validators`
+Zod schemas for every API request body. Shared between the API (`@hono/zod-validator`) and the web frontend (client-side validation).
+
+### `packages/ui`
+Shared React component library built on shadcn/ui. Used by the Next.js app.
+
+---
+
+## Key Design Decisions
+
+| Decision | Rationale |
+|---|---|
+| Standalone Hono server (not serverless) | Portability — can move to VPS without code changes |
+| ULID for all IDs | Sortable by creation time, URL-safe, UUID-compatible for future mobile sync |
+| Drizzle ORM | SQL-first — analytics queries map directly to raw SQL without magic |
+| Progress is computed | Milestone completion rolls up automatically — no manual percentage overrides |
+| Audit log on every write | Foundation for analytics, AI features, and eventual activity feeds |
+| Workspace-scoped everything | All queries filter by `workspaceId` — hard isolation between workspaces |
+
+---
+
+## Roles
+
+| Role | Capabilities |
+|---|---|
+| `owner` | Full access including workspace deletion |
+| `admin` | Full access including member management; cannot delete workspace |
+| `member` | Operational access — read/write projects, milestones, transactions |
+
+Role is enforced by the `requireRole(...roles)` middleware factory in `apps/api/src/middleware/auth.ts`.

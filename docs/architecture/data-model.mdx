@@ -1,0 +1,145 @@
+---
+title: Data Model
+description: Database schema, hierarchy, and ownership boundaries.
+---
+
+## Project Hierarchy
+
+```
+Workspace
+└── Project
+    └── Phase
+        └── Milestone
+            └── Task  (exists in DB, hidden in v1 UI)
+```
+
+Progress is fully computed bottom-up:
+- **Milestone:** closed or open
+- **Phase progress:** `completed_milestones / total_milestones × 100`
+- **Project progress:** average of all phase progress values
+
+There is no manual progress field — progress is always derived.
+
+---
+
+## Core Tables
+
+### `projects`
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | ULID | Primary key |
+| `name` | text | Required |
+| `slug` | text | Auto-generated from name, unique |
+| `description` | text | Optional |
+| `category_id` | ULID | FK → workspace categories; single-select analytical dimension |
+| `tags` | text[] | Free-text multi-select |
+| `status` | enum | `draft \| active \| on_hold \| completed \| cancelled` |
+| `health` | enum | `healthy \| at_risk \| delayed \| blocked` — user-set |
+| `priority` | enum | `low \| medium \| high \| critical` |
+| `progress_percentage` | integer | Computed; stored for query performance |
+| `budget` | decimal | Display only in v1 |
+| `currency` | varchar(3) | ISO 4217 currency code |
+| `start_date` / `due_date` | date | Optional |
+| `completed_at` | timestamp | Set when status → completed |
+| `owner_id` | ULID | FK → users |
+| `workspace_id` | ULID | FK → workspaces; all queries filter on this |
+| `visibility` | enum | `private \| workspace` |
+| `archived` | boolean | Soft-delete |
+
+`overdue` is a computed status — it is **not stored** — derived as `status = 'active' AND due_date < now()`.
+
+---
+
+### `phases`
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | ULID | Primary key |
+| `project_id` | ULID | FK → projects |
+| `name` | text | Required |
+| `description` | text | Optional |
+| `order` | integer | Display sort order |
+| `status` | enum | `active \| completed` |
+| `start_date` / `due_date` | date | Optional |
+| `completed_at` | timestamp | Set when phase is completed |
+
+---
+
+### `milestones`
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | ULID | Primary key |
+| `project_id` | ULID | FK → projects |
+| `phase_id` | ULID | FK → phases |
+| `name` | text | Required |
+| `status` | enum | `open \| completed` |
+| `due_date` | date | Optional |
+| `completed_at` | timestamp | Set on completion |
+
+---
+
+### `transactions` (Financial)
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | ULID | Primary key |
+| `project_id` | ULID | Required — project is the primary financial container |
+| `phase_id` / `milestone_id` | ULID | Optional — contextual metadata only |
+| `type` | enum | `income \| expense` |
+| `category` | text | User-defined label |
+| `amount` | decimal | Amount in the transaction's currency |
+| `currency` | varchar(3) | Transaction currency (ISO 4217) |
+| `normalized_amount` | decimal | Amount converted to workspace base currency |
+| `workspace_currency` | varchar(3) | Workspace base currency at time of entry |
+| `date` | date | Transaction date (can be future for upcoming payments) |
+| `actor_id` | ULID | FK → actors; optional counterparty |
+| `receipt_url` | text | Optional external URL |
+| `notes` | text | Optional |
+
+<Note>In v1, currency normalization is manual — the user enters `normalized_amount` directly. Exchange rate APIs are planned for v2.</Note>
+
+---
+
+### `actors`
+
+Workspace-level directory of people and organizations the workspace interacts with.
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | ULID | Primary key |
+| `workspace_id` | ULID | FK → workspaces |
+| `name` | text | Required |
+| `email` | text | Optional |
+| `phone` | text | Optional |
+| `type` | enum | `client \| collaborator \| vendor \| advisor` |
+| `company` | text | Optional |
+| `notes` | text | Optional |
+
+Actors link to projects via the `project_actors` pivot table (`project_id`, `actor_id`, `role`, `joined_at`).
+
+---
+
+### `audit_log`
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | ULID | Primary key |
+| `workspace_id` | ULID | Scope |
+| `user_id` | ULID | Who performed the action |
+| `entity` | text | `project \| phase \| milestone \| transaction \| actor \| ...` |
+| `entity_id` | ULID | ID of the affected record |
+| `action` | text | `created \| updated \| deleted \| status_changed \| archived \| completed \| ...` |
+| `metadata` | jsonb | Optional extra context (e.g. `{ name, projectId }`) |
+| `diff` | jsonb | `{ before, after }` for update events |
+| `created_at` | timestamp | When the event occurred |
+
+---
+
+## Data Ownership Boundaries
+
+| Scope | Tables |
+|---|---|
+| Workspace-level | `users`, `categories`, `actors` |
+| Project-level | `phases`, `milestones`, `tasks`, `transactions`, `notes`, `files`, `audit_log` |

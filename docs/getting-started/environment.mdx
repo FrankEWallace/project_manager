@@ -1,0 +1,63 @@
+---
+title: Environment Variables
+description: All environment variables required to run the API and web app.
+---
+
+## API — `apps/api/.env`
+
+| Variable | Required | Description |
+|---|---|---|
+| `DATABASE_URL` | Yes | PostgreSQL connection string. Format: `postgresql://user:password@host:5432/dbname` |
+| `PORT` | No | Port for the Hono server. Defaults to `3001`. |
+| `WEB_URL` | Yes | Origin of the Next.js frontend. Used for CORS and auth redirects. |
+| `RESEND_API_KEY` | Yes | API key from [resend.com](https://resend.com) — used for invitation emails. |
+| `BETTER_AUTH_SECRET` | Yes | Secret key for session signing. Generate with `openssl rand -base64 32`. |
+
+**Example `apps/api/.env`:**
+
+```env
+DATABASE_URL=postgresql://user:password@ep-xxx.neon.tech/project_manager?sslmode=require
+PORT=3001
+WEB_URL=http://localhost:3000
+RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxx
+BETTER_AUTH_SECRET=your-secret-here
+```
+
+---
+
+## Web — `apps/web/.env.local`
+
+| Variable | Required | Description |
+|---|---|---|
+| `NEXT_PUBLIC_API_URL` | Yes | Full URL of the deployed (or local) API server. |
+
+**Example `apps/web/.env.local`:**
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:3001
+```
+
+<Warning>
+`NEXT_PUBLIC_*` variables are exposed to the browser. Never put secrets here.
+</Warning>
+
+---
+
+## Production checklist
+
+<Steps>
+  <Step title="Generate BETTER_AUTH_SECRET">
+    ```bash
+    openssl rand -base64 32
+    ```
+  </Step>
+  <Step title="Set WEB_URL to your deployed frontend domain">
+    Example: `https://app.yourproject.com`
+  </Step>
+  <Step title="Set NEXT_PUBLIC_API_URL to your deployed API">
+    Example: `https://api.yourproject.com` (Railway URL)
+  </Step>
+  <Step title="Verify DATABASE_URL includes ?sslmode=require for Neon">
+    Neon requires SSL for all connections.
+  </Step>
+</Steps>

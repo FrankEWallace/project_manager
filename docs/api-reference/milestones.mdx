@@ -1,0 +1,100 @@
+---
+title: Milestones
+description: Track deliverables within phases — the unit that drives computed progress.
+---
+
+## Endpoints
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/projects/:projectId/phases/:phaseId/milestones` | List milestones in a phase |
+| `POST` | `/api/projects/:projectId/phases/:phaseId/milestones` | Create a milestone |
+| `PATCH` | `/api/projects/:projectId/phases/:phaseId/milestones/:id` | Update a milestone |
+| `PATCH` | `/api/projects/:projectId/phases/:phaseId/milestones/:id/complete` | Mark as completed |
+| `DELETE` | `/api/projects/:projectId/phases/:phaseId/milestones/:id` | Delete a milestone |
+
+---
+
+## Why Milestones Drive Progress
+
+Milestone completion is the **only** input to the progress calculation system.
+
+```
+milestone status (open | completed)
+        ↓
+phase progress = completed / total milestones × 100
+        ↓
+project progress = average of all phase progress values
+```
+
+There is no manual progress field anywhere in the hierarchy.
+
+---
+
+## List Milestones
+
+```
+GET /api/projects/:projectId/phases/:phaseId/milestones
+```
+
+**Response:**
+```json
+{
+  "data": [
+    {
+      "id": "01J...",
+      "name": "Wireframes approved",
+      "status": "completed",
+      "due_date": "2026-05-15",
+      "completed_at": "2026-05-14T09:30:00Z"
+    }
+  ]
+}
+```
+
+---
+
+## Create Milestone
+
+```
+POST /api/projects/:projectId/phases/:phaseId/milestones
+```
+
+**Request body:**
+
+| Field | Type | Required |
+|---|---|---|
+| `name` | string | Yes |
+| `dueDate` | ISO date string | No |
+
+**Response:** `201` with the created milestone.
+
+---
+
+## Update Milestone
+
+```
+PATCH /api/projects/:projectId/phases/:phaseId/milestones/:id
+```
+
+Updates name and due date. Status transitions use the `/complete` sub-route.
+
+---
+
+## Complete Milestone
+
+```
+PATCH /api/projects/:projectId/phases/:phaseId/milestones/:id/complete
+```
+
+Sets `status = 'completed'` and records `completed_at`. This triggers the progress rollup on the next project fetch.
+
+---
+
+## Delete Milestone
+
+```
+DELETE /api/projects/:projectId/phases/:phaseId/milestones/:id
+```
+
+Permanently deletes the milestone. Project progress will recalculate on the next `GET /api/projects/:id` call.

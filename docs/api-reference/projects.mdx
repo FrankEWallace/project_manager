@@ -1,0 +1,143 @@
+---
+title: Projects
+description: Create, read, update, and archive projects in your workspace.
+---
+
+## Endpoints
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/projects` | List all projects |
+| `POST` | `/api/projects` | Create a project |
+| `GET` | `/api/projects/:id` | Get a project with financials and progress |
+| `PATCH` | `/api/projects/:id` | Update a project |
+| `POST` | `/api/projects/:id/archive` | Archive a project (admin/owner only) |
+
+---
+
+## List Projects
+
+```
+GET /api/projects
+```
+
+**Query parameters:**
+
+| Param | Type | Description |
+|---|---|---|
+| `status` | string | Filter by status: `draft`, `active`, `on_hold`, `completed`, `cancelled` |
+| `categoryId` | ULID | Filter by category |
+| `archived` | boolean | `true` to include archived projects (default: `false`) |
+
+**Response:**
+```json
+{
+  "data": [
+    {
+      "id": "01J...",
+      "name": "Client Website Redesign",
+      "slug": "client-website-redesign",
+      "status": "active",
+      "health": "healthy",
+      "priority": "high",
+      "progress_percentage": 42,
+      "category": { "id": "...", "name": "Web", "color": "#6366f1" },
+      "due_date": "2026-08-01",
+      "created_at": "2026-05-01T00:00:00Z"
+    }
+  ]
+}
+```
+
+---
+
+## Create Project
+
+```
+POST /api/projects
+```
+
+**Request body:**
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `name` | string | Yes | Max 255 chars |
+| `description` | string | No | |
+| `categoryId` | ULID | No | Must belong to the workspace |
+| `status` | string | No | Default: `draft` |
+| `health` | string | No | Default: `healthy` |
+| `priority` | string | No | Default: `medium` |
+| `visibility` | string | No | `private` or `workspace`. Default: `private` |
+| `budget` | number | No | Display only |
+| `currency` | string | No | ISO 4217, e.g. `USD` |
+| `tags` | string[] | No | Free-text tags |
+| `startDate` | ISO date string | No | |
+| `dueDate` | ISO date string | No | |
+
+**Response:** `201` with the created project.
+
+---
+
+## Get Project
+
+```
+GET /api/projects/:id
+```
+
+Returns the project with computed progress, financials, and category.
+
+**Response:**
+```json
+{
+  "data": {
+    "id": "01J...",
+    "name": "Client Website Redesign",
+    "progress": 42,
+    "financials": {
+      "totalIncome": 5000,
+      "totalExpenses": 1200,
+      "profit": 3800,
+      "budget": 6000,
+      "budgetUsed": 20
+    }
+  }
+}
+```
+
+`budgetUsed` is `null` when no budget is set. It represents the percentage of the budget consumed by expenses.
+
+---
+
+## Update Project
+
+```
+PATCH /api/projects/:id
+```
+
+All fields are optional. Only provided fields are updated. If `status` changes, the audit event is `status_changed`; otherwise it is `updated`.
+
+---
+
+## Archive Project
+
+```
+POST /api/projects/:id/archive
+```
+
+Requires `admin` or `owner` role. Sets `archived = true`. Archived projects are excluded from list queries unless `?archived=true` is passed.
+
+**Response:** The updated project record.
+
+---
+
+## Project Statuses
+
+| Status | Description |
+|---|---|
+| `draft` | Not yet started |
+| `active` | Actively in progress |
+| `on_hold` | Paused |
+| `completed` | Finished |
+| `cancelled` | Abandoned |
+
+**`overdue`** is not a stored status. It is computed as: `status === 'active' AND due_date < today`. The analytics endpoints surface this count separately.

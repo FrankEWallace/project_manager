@@ -1,0 +1,81 @@
+---
+title: Deployment
+description: How to deploy the web app, API, and database to production.
+---
+
+## Stack
+
+| App | Platform | Notes |
+|---|---|---|
+| `apps/web` | Vercel | Next.js App Router — zero config |
+| `apps/api` | Railway | Docker or Node.js buildpack |
+| Database | Neon | PostgreSQL — serverless, connection pooling via pgBouncer |
+
+<Note>The system is designed with **zero platform lock-in**. The API is a standard Node.js HTTP server and can be moved to any Docker host (Contabo VPS, Fly.io, DigitalOcean, etc.) without code changes.</Note>
+
+---
+
+## Deploy: Web (Vercel)
+
+1. Connect the repository to Vercel.
+2. Set the root directory to `apps/web` (or use the Turborepo preset).
+3. Add the environment variable:
+
+```env
+NEXT_PUBLIC_API_URL=https://your-api.railway.app
+```
+
+4. Deploy. Vercel auto-detects Next.js and configures builds.
+
+---
+
+## Deploy: API (Railway)
+
+1. Create a new Railway project from the GitHub repo.
+2. Set the root directory to `apps/api`.
+3. Railway will detect the Node.js server and run `pnpm start`.
+4. Add all environment variables from `apps/api/.env`:
+
+```env
+DATABASE_URL=postgresql://...
+WEB_URL=https://your-app.vercel.app
+RESEND_API_KEY=re_...
+BETTER_AUTH_SECRET=...
+PORT=3001
+```
+
+5. Railway exposes a public HTTPS URL — copy it into Vercel's `NEXT_PUBLIC_API_URL`.
+
+---
+
+## Deploy: Database (Neon)
+
+1. Create a Neon project at [neon.tech](https://neon.tech).
+2. Copy the connection string (with `?sslmode=require`).
+3. Run migrations against the production database:
+
+```bash
+DATABASE_URL=postgresql://... pnpm db:migrate
+```
+
+---
+
+## CORS
+
+The API allows requests only from `WEB_URL`. Set this to the exact Vercel domain (including `https://`). Preview deployments on Vercel use different URLs — configure `WEB_URL` accordingly per environment.
+
+---
+
+## Future: Self-Hosted VPS
+
+The planned v2 deployment is a single Contabo VPS running everything via Docker Compose:
+
+```yaml
+services:
+  web:    # Next.js (standalone output)
+  api:    # Hono server
+  db:     # PostgreSQL 16
+  proxy:  # Caddy or nginx for TLS
+```
+
+No migration changes are required to move from Neon → self-hosted Postgres.

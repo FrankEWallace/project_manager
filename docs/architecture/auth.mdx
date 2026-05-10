@@ -1,0 +1,65 @@
+---
+title: Authentication
+description: How Better Auth handles sessions, roles, and workspace isolation.
+---
+
+## Provider
+
+Authentication is powered by **Better Auth**, configured in `packages/auth`. It supports:
+
+- **Magic link** — passwordless login via email
+- **Email + password** — traditional credentials
+
+Session tokens are stored in HTTP-only cookies. The API validates every request against the active session.
+
+---
+
+## Middleware
+
+Two middleware functions live in `apps/api/src/middleware/auth.ts`:
+
+### `requireAuth`
+
+Applied to all protected routes. Validates the session cookie and populates the Hono context:
+
+```ts
+c.get("auth") // → { userId, workspaceId, role }
+```
+
+Returns `401` if no valid session exists, `403` if the workspace context is missing.
+
+### `requireRole(...roles)`
+
+Factory that returns middleware which enforces a minimum role. Used on admin-only routes:
+
+```ts
+.post("/:id/archive", requireRole("admin", "owner"), async (c) => { ... })
+```
+
+Returns `403` if the authenticated user's role is not in the allowed list.
+
+---
+
+## Workspace Isolation
+
+Every query in the API filters by `workspaceId` from the session context — never from the request body or URL parameters. This prevents cross-workspace data leakage even if a user guesses another workspace's resource IDs.
+
+---
+
+## Invite Flow
+
+1. An `owner` or `admin` sends an invitation via `POST /api/invitations`.
+2. Resend delivers an email with a signed invite link.
+3. The invitee clicks the link, lands on `/invite/[token]`, and completes registration.
+4. On acceptance, the user is assigned `member` role in the workspace.
+5. The first accepted invitation activates **team mode** for the workspace.
+
+---
+
+## Roles Summary
+
+| Role | Who | Permissions |
+|---|---|---|
+| `owner` | Workspace creator | Everything, including workspace deletion |
+| `admin` | Elevated member | Everything except workspace deletion |
+| `member` | Standard invitee | Read/write on projects, phases, milestones, transactions, actors |

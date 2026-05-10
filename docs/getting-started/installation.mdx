@@ -1,0 +1,77 @@
+---
+title: Installation
+description: Get the project running locally in under 5 minutes.
+---
+
+## Prerequisites
+
+| Requirement | Version |
+|---|---|
+| Node.js | 20+ |
+| pnpm | 11+ |
+| PostgreSQL | 15+ (or a Neon connection string) |
+
+---
+
+## 1. Install dependencies
+
+```bash
+pnpm install
+```
+
+This installs dependencies across all workspace packages (`apps/web`, `apps/api`, `packages/*`) in one pass.
+
+---
+
+## 2. Configure environment variables
+
+```bash
+# API server
+cp apps/api/.env.example apps/api/.env
+
+# Next.js web app
+cp apps/web/.env.example apps/web/.env.local
+```
+
+See [Environment Variables](/getting-started/environment) for a full breakdown of every key.
+
+---
+
+## 3. Set up the database
+
+```bash
+# Push schema directly (fastest for dev)
+pnpm db:push
+
+# Or use migrations (recommended for any shared/staging env)
+pnpm db:generate
+pnpm db:migrate
+```
+
+<Tip>Use `pnpm db:studio` to open Drizzle Studio and browse your data visually at `http://localhost:4983`.</Tip>
+
+---
+
+## 4. Start development
+
+```bash
+pnpm dev
+```
+
+Turborepo starts both apps in parallel:
+
+| App | URL |
+|---|---|
+| Web (Next.js) | `http://localhost:3000` |
+| API (Hono) | `http://localhost:3001` |
+
+---
+
+## Database commands
+
+```bash
+pnpm db:push        # Sync schema without migrations (dev only)
+pnpm db:generate    # Generate migration files from schema changes
+pnpm db:migrate     # Run pending migrations
+pnpm db:studio      # Open Drizzle Studio
+```

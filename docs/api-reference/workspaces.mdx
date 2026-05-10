@@ -1,0 +1,62 @@
+---
+title: Workspaces
+description: View and update workspace settings.
+---
+
+## Overview
+
+Each deployment has a single workspace. The workspace holds the base currency, name, and team configuration. Workspace settings are managed by `owner` and `admin` roles only.
+
+---
+
+## Endpoints
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/workspaces/me` | Get the current workspace |
+| `PATCH` | `/api/workspaces/me` | Update workspace settings |
+
+---
+
+## Get Workspace
+
+```
+GET /api/workspaces/me
+```
+
+Returns the authenticated user's current workspace and their role.
+
+**Response:**
+```json
+{
+  "data": {
+    "id": "01J...",
+    "name": "My Studio",
+    "slug": "my-studio",
+    "base_currency": "USD",
+    "owner_id": "01J...",
+    "created_at": "2026-05-01T00:00:00Z"
+  }
+}
+```
+
+---
+
+## Update Workspace
+
+```
+PATCH /api/workspaces/me
+```
+
+Requires `admin` or `owner` role.
+
+**Request body:**
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `name` | string | No | Workspace display name |
+| `baseCurrency` | string | No | ISO 4217. Changing this does not retroactively convert existing transactions. |
+
+**Response:** Updated workspace record.
+
+<Warning>Changing `baseCurrency` affects how all new `normalized_amount` values are interpreted. Existing transaction records are not updated.</Warning>

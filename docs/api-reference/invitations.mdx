@@ -1,0 +1,85 @@
+---
+title: Invitations
+description: Invite team members to the workspace via email.
+---
+
+## Overview
+
+Invitations are sent by `owner` or `admin` users. The invitee receives an email via Resend with a signed link. On acceptance, the user is created (or linked) and assigned the `member` role.
+
+---
+
+## Endpoints
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/invitations` | List all invitations |
+| `POST` | `/api/invitations` | Send an invitation |
+| `DELETE` | `/api/invitations/:id` | Cancel a pending invitation |
+
+---
+
+## List Invitations
+
+```
+GET /api/invitations
+```
+
+Returns all invitations (pending, accepted, and expired) for the workspace.
+
+**Response:**
+```json
+{
+  "data": [
+    {
+      "id": "01J...",
+      "email": "teammate@example.com",
+      "status": "pending",
+      "expires_at": "2026-05-17T00:00:00Z",
+      "invited_by": { "id": "...", "name": "Frank" },
+      "created_at": "2026-05-10T00:00:00Z"
+    }
+  ]
+}
+```
+
+---
+
+## Send Invitation
+
+```
+POST /api/invitations
+```
+
+Requires `admin` or `owner` role.
+
+**Request body:**
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `email` | string | Yes | The invitee's email address |
+
+Sends a Resend email with a signed invite link. The link expires after 7 days. Duplicate invitations to the same email are rejected if a pending invitation already exists.
+
+**Response:** `201` with the created invitation record.
+
+---
+
+## Cancel Invitation
+
+```
+DELETE /api/invitations/:id
+```
+
+Requires `admin` or `owner` role. Marks the invitation as cancelled and invalidates the invite link.
+
+**Response:**
+```json
+{ "success": true }
+```
+
+---
+
+## Team Mode
+
+The first accepted invitation activates **team mode** on the workspace. Before that, the workspace behaves as a single-user setup with no role enforcement on member-level actions.

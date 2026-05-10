@@ -1,0 +1,106 @@
+---
+title: Actors
+description: Workspace-level directory of clients, collaborators, vendors, and advisors.
+---
+
+## What is an Actor?
+
+An actor is a person or organization that the workspace interacts with. Actors live at the workspace level — they are not scoped to individual projects. A single actor (e.g. "ACME Corp") can appear across many projects.
+
+Actors link to projects via the `project_actors` pivot table and can be referenced as counterparties on financial transactions.
+
+---
+
+## Endpoints
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/actors` | List all actors in the workspace |
+| `POST` | `/api/actors` | Create an actor |
+| `GET` | `/api/actors/:id` | Get a single actor |
+| `PATCH` | `/api/actors/:id` | Update an actor |
+| `DELETE` | `/api/actors/:id` | Delete an actor |
+
+---
+
+## List Actors
+
+```
+GET /api/actors
+```
+
+Returns all workspace actors ordered alphabetically by name.
+
+**Response:**
+```json
+{
+  "data": [
+    {
+      "id": "01J...",
+      "name": "ACME Corp",
+      "email": "billing@acme.com",
+      "type": "client",
+      "company": "ACME Corporation",
+      "phone": "+1 555 000 1234",
+      "notes": "Net 30 payment terms"
+    }
+  ]
+}
+```
+
+---
+
+## Create Actor
+
+```
+POST /api/actors
+```
+
+**Request body:**
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `name` | string | Yes | |
+| `type` | string | Yes | `client`, `collaborator`, `vendor`, or `advisor` |
+| `email` | string | No | |
+| `phone` | string | No | |
+| `company` | string | No | |
+| `notes` | string | No | |
+
+**Response:** `201` with the created actor.
+
+---
+
+## Update Actor
+
+```
+PATCH /api/actors/:id
+```
+
+All fields optional. Any provided field is merged into the existing record.
+
+---
+
+## Delete Actor
+
+```
+DELETE /api/actors/:id
+```
+
+Permanently deletes the actor. Associated `project_actors` records are cascade-deleted. Transactions that referenced this actor will retain the `actor_id` but the join will return `null`.
+
+**Response:**
+```json
+{ "success": true }
+```
+
+---
+
+## Actor Types
+
+| Type | Typical Use |
+|---|---|
+| `client` | The paying party — appears on income transactions |
+| `collaborator` | Freelancer or subcontractor — appears on expense transactions |
+| `vendor` | Software, tools, services — appears on expense transactions |
+| `advisor` | Mentors, consultants — typically no financial relationship |
