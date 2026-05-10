@@ -3332,7 +3332,7 @@ var milestonesRouter = new Hono3().use(requireAuth).post("/:projectId/phases/:ph
 import { Hono as Hono4 } from "hono";
 import { zValidator as zValidator4 } from "@hono/zod-validator";
 import { eq as eq6, and as and6, desc as desc2 } from "drizzle-orm";
-var transactionsRouter = new Hono4().use(requireAuth).get("/projects/:projectId/transactions", async (c) => {
+var transactionsRouter = new Hono4().use("/projects/*", requireAuth).get("/projects/:projectId/transactions", async (c) => {
   const { workspaceId } = c.get("auth");
   const { projectId } = c.req.param();
   const project = await db.query.projects.findFirst({
@@ -4320,7 +4320,7 @@ app.use(
     allowHeaders: ["Content-Type", "Authorization", "X-Workspace-Id"]
   })
 );
-app.on(["GET", "POST"], "/api/auth/**", (c) => auth.handler(c.req.raw));
+app.on(["GET", "POST"], "/api/auth/*", (c) => auth.handler(c.req.raw));
 app.get("/health", (c) => c.json({ status: "ok" }));
 app.route("/api/projects", projectsRouter);
 app.route("/api/projects", phasesRouter);

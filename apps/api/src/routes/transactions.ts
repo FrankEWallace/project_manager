@@ -7,7 +7,7 @@ import { requireAuth } from "../middleware/auth.js";
 import { writeAuditLog } from "../lib/audit.js";
 
 export const transactionsRouter = new Hono()
-  .use(requireAuth)
+  .use("/projects/*", requireAuth)
 
   .get("/projects/:projectId/transactions", async (c) => {
     const { workspaceId } = c.get("auth");
