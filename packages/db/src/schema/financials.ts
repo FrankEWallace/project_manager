@@ -29,6 +29,7 @@ export const transactions = pgTable("transactions", {
   normalizedAmount: numeric("normalized_amount", { precision: 14, scale: 2 }).notNull(),
   workspaceCurrency: currencyCodeEnum("workspace_currency").notNull(),
   date: timestamp("date", { withTimezone: true }).notNull(),
+  invoiceId: text("invoice_id"), // set when transaction is auto-created from an invoice payment
   receiptUrl: text("receipt_url"),
   notes: text("notes"),
   createdBy: text("created_by").notNull(), // Better Auth user.id

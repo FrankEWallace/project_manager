@@ -5,12 +5,13 @@ import { workspaces } from "./workspace.ts";
 export const auditEntityEnum = pgEnum("audit_entity", [
   "workspace", "project", "phase", "milestone", "task",
   "transaction", "actor", "user", "invitation",
+  "invoice", "invoice_settings",
 ]);
 
 export const auditActionEnum = pgEnum("audit_action", [
   "created", "updated", "deleted", "status_changed",
   "member_added", "member_removed", "invited", "archived",
-  "completed", "reopened",
+  "completed", "reopened", "payment_recorded",
 ]);
 
 export const auditLogs = pgTable("audit_logs", {

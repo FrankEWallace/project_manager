@@ -3,8 +3,8 @@ import { zValidator } from "@hono/zod-validator";
 import { db, transactions, projects } from "@repo/db";
 import { createTransactionSchema } from "@repo/validators";
 import { eq, and, desc } from "drizzle-orm";
-import { requireAuth } from "../middleware/auth.ts";
-import { writeAuditLog } from "../lib/audit.ts";
+import { requireAuth } from "../middleware/auth.js";
+import { writeAuditLog } from "../lib/audit.js";
 
 export const transactionsRouter = new Hono()
   .use(requireAuth)

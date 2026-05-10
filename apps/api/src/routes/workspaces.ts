@@ -2,9 +2,9 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { db, workspaceMembers, workspaces } from "@repo/db";
 import { eq } from "drizzle-orm";
-import { auth } from "../lib/auth.ts";
+import { auth } from "../lib/auth.js";
 import { updateWorkspaceSchema } from "@repo/validators";
-import { requireAuth } from "../middleware/auth.ts";
+import { requireAuth } from "../middleware/auth.js";
 
 type CurrencyCode = "USD" | "EUR" | "GBP" | "MYR" | "TZS" | "NGN" | "KES" | "GHS" | "ZAR" | "INR" | "AUD" | "CAD" | "SGD" | "AED" | "SAR" | "JPY" | "CNY" | "BRL" | "MXN" | "PKR";
 

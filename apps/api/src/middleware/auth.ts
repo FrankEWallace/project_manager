@@ -1,5 +1,5 @@
 import type { Context, Next } from "hono";
-import { auth } from "../lib/auth.ts";
+import { auth } from "../lib/auth.js";
 import { db, workspaceMembers } from "@repo/db";
 import { eq, and } from "drizzle-orm";
 

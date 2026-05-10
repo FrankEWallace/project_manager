@@ -5,9 +5,9 @@ import { randomBytes } from "crypto";
 import { db, invitations, workspaceMembers, workspaces, authUser } from "@repo/db";
 import { eq, and, isNull, gt } from "drizzle-orm";
 import { createId } from "@paralleldrive/cuid2";
-import { requireAuth, requireRole } from "../middleware/auth.ts";
+import { requireAuth, requireRole } from "../middleware/auth.js";
 import { inviteUserSchema } from "@repo/validators";
-import { auth } from "../lib/auth.ts";
+import { auth } from "../lib/auth.js";
 
 const resend = process.env["RESEND_API_KEY"] ? new Resend(process.env["RESEND_API_KEY"]) : null;
 

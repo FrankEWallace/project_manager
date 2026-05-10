@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { db, projects, transactions, milestones, phases } from "@repo/db";
 import { eq, sql, count, and, inArray, gte, lt, gt, desc } from "drizzle-orm";
-import { requireAuth } from "../middleware/auth.ts";
+import { requireAuth } from "../middleware/auth.js";
 
 export const analyticsRouter = new Hono()
   .use(requireAuth)

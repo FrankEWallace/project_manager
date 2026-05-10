@@ -3,9 +3,9 @@ import { zValidator } from "@hono/zod-validator";
 import { db, projects, phases, milestones, transactions } from "@repo/db";
 import { createProjectSchema, updateProjectSchema } from "@repo/validators";
 import { eq, and, sql, desc } from "drizzle-orm";
-import { requireAuth, requireRole } from "../middleware/auth.ts";
-import { writeAuditLog } from "../lib/audit.ts";
-import { computeProjectProgress } from "../lib/progress.ts";
+import { requireAuth, requireRole } from "../middleware/auth.js";
+import { writeAuditLog } from "../lib/audit.js";
+import { computeProjectProgress } from "../lib/progress.js";
 
 function slugify(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");

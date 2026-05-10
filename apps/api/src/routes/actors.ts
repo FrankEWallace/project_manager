@@ -3,8 +3,8 @@ import { zValidator } from "@hono/zod-validator";
 import { db, actors } from "@repo/db";
 import { createActorSchema, updateActorSchema } from "@repo/validators";
 import { eq, and } from "drizzle-orm";
-import { requireAuth } from "../middleware/auth.ts";
-import { writeAuditLog } from "../lib/audit.ts";
+import { requireAuth } from "../middleware/auth.js";
+import { writeAuditLog } from "../lib/audit.js";
 
 export const actorsRouter = new Hono()
   .use(requireAuth)

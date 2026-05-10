@@ -1,17 +1,18 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
-import { auth } from "./lib/auth.ts";
-import { projectsRouter } from "./routes/projects.ts";
-import { phasesRouter } from "./routes/phases.ts";
-import { milestonesRouter } from "./routes/milestones.ts";
-import { transactionsRouter } from "./routes/transactions.ts";
-import { analyticsRouter } from "./routes/analytics.ts";
-import { workspacesRouter } from "./routes/workspaces.ts";
-import { actorsRouter } from "./routes/actors.ts";
-import { projectActorsRouter } from "./routes/projectActors.ts";
-import { invitationsRouter } from "./routes/invitations.ts";
-import { tasksRouter } from "./routes/tasks.ts";
+import { auth } from "./lib/auth.js";
+import { projectsRouter } from "./routes/projects.js";
+import { phasesRouter } from "./routes/phases.js";
+import { milestonesRouter } from "./routes/milestones.js";
+import { transactionsRouter } from "./routes/transactions.js";
+import { analyticsRouter } from "./routes/analytics.js";
+import { workspacesRouter } from "./routes/workspaces.js";
+import { actorsRouter } from "./routes/actors.js";
+import { projectActorsRouter } from "./routes/projectActors.js";
+import { invitationsRouter } from "./routes/invitations.js";
+import { tasksRouter } from "./routes/tasks.js";
+import { invoicesRouter } from "./routes/invoices.js";
 
 const app = new Hono();
 
@@ -39,5 +40,6 @@ app.route("/api/projects", projectActorsRouter);
 app.route("/api", transactionsRouter);
 app.route("/api/invitations", invitationsRouter);
 app.route("/api/projects", tasksRouter);
+app.route("/api/invoices", invoicesRouter);
 
 export default app;

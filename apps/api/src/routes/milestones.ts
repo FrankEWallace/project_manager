@@ -3,8 +3,8 @@ import { zValidator } from "@hono/zod-validator";
 import { db, projects, phases, milestones } from "@repo/db";
 import { createMilestoneSchema, updateMilestoneSchema } from "@repo/validators";
 import { eq, and } from "drizzle-orm";
-import { requireAuth } from "../middleware/auth.ts";
-import { writeAuditLog } from "../lib/audit.ts";
+import { requireAuth } from "../middleware/auth.js";
+import { writeAuditLog } from "../lib/audit.js";
 
 async function verifyProjectAccess(projectId: string, workspaceId: string) {
   return db.query.projects.findFirst({

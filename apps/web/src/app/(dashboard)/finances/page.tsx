@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatCurrency } from "@/lib/utils";
 import { ArrowDownLeft, ArrowUpRight, CalendarClock, Plus } from "lucide-react";
+import { InvoiceTab } from "@/components/invoices/invoice-tab";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -445,6 +446,7 @@ export default function FinancesPage() {
         <TabsList>
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="transactions">Transactions</TabsTrigger>
+          <TabsTrigger value="invoices">Invoices</TabsTrigger>
           <TabsTrigger value="accounts" disabled>Accounts</TabsTrigger>
         </TabsList>
 
@@ -458,6 +460,10 @@ export default function FinancesPage() {
 
         <TabsContent value="transactions">
           <TransactionsTable />
+        </TabsContent>
+
+        <TabsContent value="invoices">
+          <InvoiceTab />
         </TabsContent>
 
         <TabsContent value="accounts">

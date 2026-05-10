@@ -1,8 +1,8 @@
 import { Hono } from "hono";
 import { db, projects, projectActors, actors } from "@repo/db";
 import { eq, and } from "drizzle-orm";
-import { requireAuth } from "../middleware/auth.ts";
-import { writeAuditLog } from "../lib/audit.ts";
+import { requireAuth } from "../middleware/auth.js";
+import { writeAuditLog } from "../lib/audit.js";
 
 async function verifyProjectAccess(projectId: string, workspaceId: string) {
   return db.query.projects.findFirst({

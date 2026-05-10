@@ -135,6 +135,61 @@ export const inviteUserSchema = z.object({
   role: z.enum(["admin", "member"]).default("member"),
 });
 
+// ─── Invoice ──────────────────────────────────────────────────────────────────
+
+const invoiceStatuses = ["draft", "sent", "partially_paid", "paid", "void"] as const;
+
+export const invoiceItemSchema = z.object({
+  description: z.string().min(1).max(255),
+  details: z.string().optional(),
+  quantity: z.number().positive(),
+  rate: z.number().min(0),
+  sortOrder: z.number().int().min(0).default(0),
+});
+
+export const createInvoiceSchema = z.object({
+  projectId: z.string().optional(),
+  actorId: z.string().min(1),
+  currency: z.string().length(3),
+  normalizedTotal: z.number().positive(),
+  taxRate: z.number().min(0).max(100).default(0),
+  issueDate: z.string().datetime(),
+  dueDate: z.string().datetime(),
+  notes: z.string().optional(),
+  items: z.array(invoiceItemSchema).min(1),
+});
+
+export const updateInvoiceSchema = z.object({
+  projectId: z.string().optional().nullable(),
+  actorId: z.string().optional(),
+  currency: z.string().length(3).optional(),
+  taxRate: z.number().min(0).max(100).optional(),
+  normalizedTotal: z.number().positive().optional(),
+  issueDate: z.string().datetime().optional(),
+  dueDate: z.string().datetime().optional(),
+  notes: z.string().optional(),
+  items: z.array(invoiceItemSchema).min(1).optional(),
+});
+
+export const recordPaymentSchema = z.object({
+  amount: z.number().positive(),
+  currency: z.string().length(3),
+  normalizedAmount: z.number().positive(),
+  date: z.string().datetime(),
+  notes: z.string().optional(),
+});
+
+export const upsertInvoiceSettingsSchema = z.object({
+  invoicePrefix: z.string().min(1).max(10).optional(),
+  companyName: z.string().optional(),
+  companyAddress: z.string().optional(),
+  companyEmail: z.string().email().optional(),
+  companyPhone: z.string().optional(),
+  paymentDetails: z.string().optional(),
+  defaultTaxRate: z.number().min(0).max(100).optional(),
+  defaultPaymentTermsDays: z.number().int().min(0).max(365).optional(),
+});
+
 // ─── Type exports ─────────────────────────────────────────────────────────────
 
 export type CreateWorkspace = z.infer<typeof createWorkspaceSchema>;

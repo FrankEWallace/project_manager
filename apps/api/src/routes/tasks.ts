@@ -4,8 +4,8 @@ import { db, tasks, milestones, phases, projects } from "@repo/db";
 import { createTaskSchema, updateTaskSchema } from "@repo/validators";
 import { eq, and, asc } from "drizzle-orm";
 import { createId } from "@paralleldrive/cuid2";
-import { requireAuth } from "../middleware/auth.ts";
-import { writeAuditLog } from "../lib/audit.ts";
+import { requireAuth } from "../middleware/auth.js";
+import { writeAuditLog } from "../lib/audit.js";
 
 async function verifyProjectAccess(projectId: string, workspaceId: string) {
   return db.query.projects.findFirst({
