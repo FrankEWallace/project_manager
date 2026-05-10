@@ -3,10 +3,6 @@ lockfileVersion: '9.0'
 settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
-  onlyBuiltDependencies:
-    - esbuild
-    - sharp
-    - unrs-resolver
 
 importers:
 
@@ -15,6 +11,9 @@ importers:
       '@types/node':
         specifier: ^22.15.3
         version: 22.19.17
+      drizzle-orm:
+        specifier: ^0.41.0
+        version: 0.41.0(kysely@0.28.17)(postgres@3.4.9)
       prettier:
         specifier: ^3.5.3
         version: 3.8.3
