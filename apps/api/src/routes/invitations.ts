@@ -138,7 +138,7 @@ export const invitationsRouter = new Hono()
 
   // Accept invite (auth required, no workspace header)
   .post("/accept", async (c) => {
-    const session = await auth.api.getSession({ headers: c.req.raw.headers });
+    const session = await auth.api.getSession({ headers: (c.req.raw as any).headers });
     if (!session?.user) return c.json({ error: "Unauthorized" }, 401);
 
     const body = await c.req.json() as { token?: string };

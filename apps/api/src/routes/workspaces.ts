@@ -12,7 +12,7 @@ export const workspacesRouter = new Hono()
 
   // No X-Workspace-Id needed — this is how the client discovers the workspace
   .get("/me", async (c) => {
-    const session = await auth.api.getSession({ headers: c.req.raw.headers });
+    const session = await auth.api.getSession({ headers: (c.req.raw as any).headers });
     if (!session?.user) return c.json({ error: "Unauthorized" }, 401);
 
     const memberships = await db.query.workspaceMembers.findMany({
