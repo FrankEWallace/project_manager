@@ -53,7 +53,7 @@ export const projectsRouter = new Hono()
       workspaceId,
       ownerId: userId,
       createdBy: userId,
-    }).returning();
+    } as any).returning();
 
     await writeAuditLog({
       workspaceId,
@@ -131,7 +131,7 @@ export const projectsRouter = new Hono()
         startDate: body.startDate ? new Date(body.startDate) : undefined,
         dueDate: body.dueDate ? new Date(body.dueDate) : undefined,
         updatedAt: new Date(),
-      })
+      } as any)
       .where(eq(projects.id, existing.id))
       .returning();
 
@@ -153,7 +153,7 @@ export const projectsRouter = new Hono()
 
     const [updated] = await db
       .update(projects)
-      .set({ archived: true, updatedAt: new Date() })
+      .set({ archived: true, updatedAt: new Date() } as any)
       .where(and(eq(projects.id, id!), eq(projects.workspaceId, workspaceId)))
       .returning();
 
