@@ -22,5 +22,5 @@ export async function writeAuditLog(params: AuditParams): Promise<void> {
     action: params.action,
     diff: params.diff ?? null,
     metadata: params.metadata ?? null,
-  });
+  } as any);
 }
