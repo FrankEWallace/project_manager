@@ -31,6 +31,13 @@ export function useApi<T>(path: string, deps: unknown[] = []) {
 
   useEffect(() => { fetch(); }, [fetch]);
 
+  // Refetch when the tab regains focus so stale data is never shown
+  useEffect(() => {
+    const onFocus = () => { if (token && workspaceId) fetch(); };
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [fetch, token, workspaceId]);
+
   return { data, loading, error, refetch: fetch };
 }
 

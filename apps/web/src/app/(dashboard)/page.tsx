@@ -3,9 +3,8 @@
 import { WorkspaceInit } from "@/components/workspace-init";
 import { useApi } from "@/hooks/use-api";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { formatCurrency } from "@/lib/utils";
-import { AlertTriangle } from "lucide-react";
+import { formatCurrency, formatDate } from "@/lib/utils";
+import { AlertTriangle, ArrowUpRight, ArrowDownRight, Minus, TrendingUp, FolderKanban, CheckSquare, Clock } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { OnboardingChecklist } from "@/components/ui/onboarding-checklist";
@@ -25,51 +24,89 @@ interface Trends {
   activeProjects: { current: number; previous: number; pct: number | null };
 }
 
-function TrendBadge({ pct, invert = false }: { pct: number | null; invert?: boolean }) {
-  if (pct === null) return null;
-  const positive = invert ? pct <= 0 : pct >= 0;
-  return (
-    <Badge
-      className={
-        positive
-          ? "bg-green-500/10 text-green-700 dark:text-green-300"
-          : "bg-red-500/10 text-destructive"
-      }
-    >
-      {pct >= 0 ? "+" : ""}{pct}%
-    </Badge>
-  );
+interface Project {
+  id: string;
+  name: string;
+  status: string;
+  health: string;
+  priority: string;
+  budget: string | null;
+  dueDate: string | null;
+  createdAt: string;
+}
+
+interface MilestonesSummary {
+  total: number;
+  completed: number;
+  completionRate: number;
+}
+
+interface UpcomingPayment {
+  id: string;
+  description: string;
+  type: "income" | "expense";
+  amount: string;
+  currency: string;
+  date: string;
+  projectName: string;
 }
 
 function Skeleton({ className = "" }: { className?: string }) {
   return <div className={`bg-muted animate-pulse rounded ${className}`} />;
 }
 
-const statusLabels: Record<string, string> = {
-  active: "Active",
-  completed: "Completed",
-  on_hold: "On hold",
-  overdue: "Overdue",
+function TrendIcon({ pct, invert = false }: { pct: number | null; invert?: boolean }) {
+  if (pct === null) return <Minus className="h-3.5 w-3.5 text-muted-foreground" />;
+  const good = invert ? pct <= 0 : pct >= 0;
+  if (pct === 0) return <Minus className="h-3.5 w-3.5 text-muted-foreground" />;
+  return good
+    ? <ArrowUpRight className="h-3.5 w-3.5 text-green-600" />
+    : <ArrowDownRight className="h-3.5 w-3.5 text-red-500" />;
+}
+
+function TrendLabel({ pct, invert = false }: { pct: number | null; invert?: boolean }) {
+  if (pct === null) return <span className="text-xs text-muted-foreground">No prior data</span>;
+  const good = invert ? pct <= 0 : pct >= 0;
+  const color = pct === 0 ? "text-muted-foreground" : good ? "text-green-600" : "text-red-500";
+  return (
+    <span className={`text-xs font-medium ${color} flex items-center gap-0.5`}>
+      <TrendIcon pct={pct} invert={invert} />
+      {pct >= 0 ? "+" : ""}{pct}% vs last month
+    </span>
+  );
+}
+
+const statusBadgeVariant: Record<string, string> = {
+  active: "bg-blue-500/10 text-blue-700 dark:text-blue-300",
+  completed: "bg-green-500/10 text-green-700 dark:text-green-300",
+  on_hold: "bg-yellow-500/10 text-yellow-700 dark:text-yellow-300",
+  draft: "bg-muted text-muted-foreground",
+  cancelled: "bg-red-500/10 text-red-700 dark:text-red-300",
 };
 
-const statusColors: Record<string, string> = {
-  active: "bg-blue-500",
-  completed: "bg-green-500",
-  on_hold: "bg-yellow-500",
-  overdue: "bg-red-500",
+const healthDot: Record<string, string> = {
+  healthy: "bg-green-500",
+  at_risk: "bg-yellow-500",
+  delayed: "bg-orange-500",
+  blocked: "bg-red-500",
 };
 
-interface Project { id: string }
-interface Actor { id: string }
-interface Member { id: string }
+const priorityLabel: Record<string, string> = {
+  low: "text-muted-foreground",
+  medium: "text-blue-600",
+  high: "text-orange-600",
+  critical: "text-red-600",
+};
 
 export default function DashboardPage() {
   const { data: session } = useSession();
   const { data: portfolio, loading: pLoading } = useApi<Portfolio>("/api/analytics/portfolio");
   const { data: trends, loading: tLoading } = useApi<Trends>("/api/analytics/trends");
   const { data: projects } = useApi<Project[]>("/api/projects");
-  const { data: actors } = useApi<Actor[]>("/api/actors");
-  const { data: members } = useApi<Member[]>("/api/invitations/members");
+  const { data: milestones } = useApi<MilestonesSummary>("/api/analytics/milestones-summary");
+  const { data: upcomingPayments } = useApi<UpcomingPayment[]>("/api/analytics/upcoming-payments");
+  const { data: actors } = useApi<{ id: string }[]>("/api/actors");
+  const { data: members } = useApi<{ id: string }[]>("/api/invitations/members");
 
   const loading = pLoading || tLoading;
 
@@ -77,18 +114,30 @@ export default function DashboardPage() {
   const completed = portfolio?.statusBreakdown.find((s) => s.status === "completed")?.count ?? 0;
   const onHold = portfolio?.statusBreakdown.find((s) => s.status === "on_hold")?.count ?? 0;
 
+  const now = new Date();
+  const recentProjects = [...(projects ?? [])].slice(0, 6);
+  const overdueProjects = (projects ?? []).filter(
+    (p) => p.status === "active" && p.dueDate && new Date(p.dueDate) < now
+  );
+  const dueSoonProjects = (projects ?? []).filter(
+    (p) => p.status === "active" && p.dueDate && new Date(p.dueDate) >= now &&
+      new Date(p.dueDate) <= new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000)
+  );
+
   const kpis = [
     {
       label: "Total revenue",
       value: formatCurrency(portfolio?.financials.totalIncome ?? 0),
       pct: trends?.income.pct ?? null,
       invert: false,
+      icon: <TrendingUp className="h-4 w-4 text-muted-foreground" />,
     },
     {
       label: "Total expenses",
       value: formatCurrency(portfolio?.financials.totalExpenses ?? 0),
       pct: trends?.expenses.pct ?? null,
       invert: true,
+      icon: <ArrowDownRight className="h-4 w-4 text-muted-foreground" />,
     },
     {
       label: "Net profit",
@@ -97,19 +146,36 @@ export default function DashboardPage() {
       invert: false,
       colored: true,
       profit: portfolio?.financials.profit ?? 0,
+      icon: <TrendingUp className="h-4 w-4 text-muted-foreground" />,
     },
     {
       label: "Active projects",
       value: String(active),
       pct: trends?.activeProjects.pct ?? null,
       invert: false,
+      icon: <FolderKanban className="h-4 w-4 text-muted-foreground" />,
     },
   ];
+
+  const hasProject = (projects?.length ?? 0) > 0;
+  const hasActor = (actors?.length ?? 0) > 0;
+  const hasTeamMember = (members?.length ?? 0) > 1;
+  const hasIncome = (portfolio?.financials.totalIncome ?? 0) > 0;
+  const onboardingSteps = [
+    { id: 1, title: "Create your first project", isCompleted: hasProject },
+    { id: 2, title: "Add an actor (client, collaborator…)", isCompleted: hasActor },
+    { id: 3, title: "Log your first transaction", isCompleted: hasIncome },
+    { id: 4, title: "Invite a team member", isCompleted: hasTeamMember },
+    { id: 5, title: "Set up workspace settings", isCompleted: !!(session?.user?.name) },
+  ];
+  const showOnboarding = !onboardingSteps.every((s) => s.isCompleted);
 
   return (
     <>
       <WorkspaceInit />
-      <div className="p-6 max-w-6xl mx-auto space-y-6">
+      <div className="p-6 max-w-7xl mx-auto space-y-6">
+
+        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
@@ -120,106 +186,207 @@ export default function DashboardPage() {
           </Button>
         </div>
 
-        {/* Onboarding checklist — shown until all steps complete */}
-        {(() => {
-          const hasProject = (projects?.length ?? 0) > 0;
-          const hasActor = (actors?.length ?? 0) > 0;
-          const hasTeamMember = (members?.length ?? 0) > 1;
-          const hasIncome = (portfolio?.financials.totalIncome ?? 0) > 0;
-          const steps = [
-            { id: 1, title: "Create your first project", isCompleted: hasProject },
-            { id: 2, title: "Add an actor (client, collaborator…)", isCompleted: hasActor },
-            { id: 3, title: "Log your first transaction", isCompleted: hasIncome },
-            { id: 4, title: "Invite a team member", isCompleted: hasTeamMember },
-            { id: 5, title: "Set up workspace settings", isCompleted: !!(session?.user?.name) },
-          ];
-          if (steps.every((s) => s.isCompleted)) return null;
-          return (
-            <OnboardingChecklist
-              steps={steps}
-              title={`Getting started · ${steps.filter(s => s.isCompleted).length}/${steps.length}`}
-            />
-          );
-        })()}
+        {showOnboarding && (
+          <OnboardingChecklist
+            steps={onboardingSteps}
+            title={`Getting started · ${onboardingSteps.filter(s => s.isCompleted).length}/${onboardingSteps.length}`}
+          />
+        )}
 
-        {/* Unified KPI grid */}
-        <div className="overflow-hidden rounded-xl bg-card ring-1 ring-foreground/10">
-          <div className="grid grid-cols-2 xl:grid-cols-4">
-            {kpis.map((kpi, i) => {
-              const isLastRow = i >= 2;
-              const isRight = i % 2 === 1;
-              return (
-                <div
-                  key={kpi.label}
-                  className={[
-                    "p-5 flex flex-col gap-3",
-                    !isLastRow ? "border-b border-foreground/10" : "",
-                    !isRight ? "border-r border-foreground/10" : "",
-                  ].join(" ")}
-                >
-                  <p className="text-sm text-muted-foreground">{kpi.label}</p>
-                  {loading ? (
-                    <Skeleton className="h-8 w-28" />
-                  ) : (
-                    <div className="flex items-end justify-between gap-2">
-                      <span
-                        className={[
-                          "text-2xl font-bold leading-none",
-                          kpi.colored
-                            ? kpi.profit >= 0
-                              ? "text-green-600"
-                              : "text-destructive"
-                            : "text-foreground",
-                        ].join(" ")}
-                      >
-                        {kpi.value}
-                      </span>
-                      <TrendBadge pct={kpi.pct} invert={kpi.invert} />
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Status breakdown */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {[
-            { label: "Active", value: active, key: "active" },
-            { label: "Completed", value: completed, key: "completed" },
-            { label: "On hold", value: onHold, key: "on_hold" },
-            { label: "Overdue", value: portfolio?.overdue ?? 0, key: "overdue" },
-          ].map(({ label, value, key }) => (
-            <Card key={key}>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className={`w-2 h-2 rounded-full shrink-0 ${statusColors[key]}`} />
-                  <div>
-                    <p className={`text-2xl font-bold ${key === "overdue" && value > 0 ? "text-destructive" : "text-foreground"}`}>
-                      {loading ? "—" : value}
-                    </p>
-                    <p className="text-xs text-muted-foreground">{label}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+        {/* KPI row */}
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-px bg-border rounded-xl overflow-hidden ring-1 ring-border">
+          {kpis.map((kpi) => (
+            <div key={kpi.label} className="bg-card p-5 flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">{kpi.label}</p>
+                {kpi.icon}
+              </div>
+              {loading ? (
+                <Skeleton className="h-8 w-28" />
+              ) : (
+                <>
+                  <span
+                    className={[
+                      "text-2xl font-bold leading-none tracking-tight",
+                      kpi.colored
+                        ? (kpi.profit ?? 0) >= 0 ? "text-green-600" : "text-destructive"
+                        : "text-foreground",
+                    ].join(" ")}
+                  >
+                    {kpi.value}
+                  </span>
+                  <TrendLabel pct={kpi.pct} invert={kpi.invert} />
+                </>
+              )}
+            </div>
           ))}
         </div>
 
-        {(portfolio?.overdue ?? 0) > 0 && (
-          <Card className="border-red-200 bg-red-50 dark:bg-red-950/20">
-            <CardContent className="pt-4 pb-4">
-              <div className="flex items-center gap-3 text-red-700 dark:text-red-400">
-                <AlertTriangle className="h-4 w-4 shrink-0" />
-                <p className="text-sm font-medium">
-                  {portfolio!.overdue} project{portfolio!.overdue > 1 ? "s are" : " is"} overdue.{" "}
-                  <Link href="/projects?status=active" className="underline">View projects</Link>
+        {/* Status + milestone row */}
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+          {[
+            { label: "Active", value: active, dot: "bg-blue-500" },
+            { label: "Completed", value: completed, dot: "bg-green-500" },
+            { label: "On hold", value: onHold, dot: "bg-yellow-500" },
+            { label: "Overdue", value: portfolio?.overdue ?? 0, dot: "bg-red-500", warn: true },
+          ].map(({ label, value, dot, warn }) => (
+            <div key={label} className="bg-card border rounded-xl p-4 flex items-center gap-3">
+              <div className={`w-2 h-2 rounded-full shrink-0 ${dot}`} />
+              <div>
+                <p className={`text-xl font-bold ${warn && value > 0 ? "text-destructive" : "text-foreground"}`}>
+                  {loading ? "—" : value}
                 </p>
+                <p className="text-xs text-muted-foreground">{label}</p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          ))}
+          <div className="bg-card border rounded-xl p-4 flex items-center gap-3">
+            <CheckSquare className="h-4 w-4 text-muted-foreground shrink-0" />
+            <div>
+              <p className="text-xl font-bold text-foreground">
+                {milestones ? `${milestones.completionRate}%` : "—"}
+              </p>
+              <p className="text-xs text-muted-foreground">Milestones done</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Alert banner */}
+        {(portfolio?.overdue ?? 0) > 0 && (
+          <div className="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 dark:bg-red-950/20 px-4 py-3 text-red-700 dark:text-red-400">
+            <AlertTriangle className="h-4 w-4 shrink-0" />
+            <p className="text-sm font-medium">
+              {portfolio!.overdue} project{portfolio!.overdue > 1 ? "s are" : " is"} overdue.{" "}
+              <Link href="/projects" className="underline underline-offset-2">View projects</Link>
+            </p>
+          </div>
         )}
+
+        {/* Main grid: recent projects + sidebar */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
+          {/* Recent projects table */}
+          <div className="xl:col-span-2 bg-card border rounded-xl overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b">
+              <h2 className="font-semibold text-foreground text-sm">Recent projects</h2>
+              <Link href="/projects" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+                View all →
+              </Link>
+            </div>
+            {!projects || loading ? (
+              <div className="p-5 space-y-3">
+                {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-10 w-full" />)}
+              </div>
+            ) : recentProjects.length === 0 ? (
+              <div className="py-16 text-center text-muted-foreground text-sm">
+                <FolderKanban className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                No projects yet
+              </div>
+            ) : (
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-muted/40">
+                    <th className="text-left px-5 py-2.5 text-xs font-medium text-muted-foreground">Project</th>
+                    <th className="text-left px-3 py-2.5 text-xs font-medium text-muted-foreground hidden sm:table-cell">Status</th>
+                    <th className="text-left px-3 py-2.5 text-xs font-medium text-muted-foreground hidden md:table-cell">Priority</th>
+                    <th className="text-right px-5 py-2.5 text-xs font-medium text-muted-foreground hidden lg:table-cell">Due</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {recentProjects.map((p) => {
+                    const isOverdue = p.status === "active" && p.dueDate && new Date(p.dueDate) < now;
+                    return (
+                      <tr key={p.id} className="hover:bg-muted/30 transition-colors group">
+                        <td className="px-5 py-3">
+                          <Link href={`/projects/${p.id}`} className="flex items-center gap-2.5">
+                            <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${healthDot[p.health] ?? "bg-muted"}`} />
+                            <span className="font-medium text-foreground group-hover:text-primary transition-colors truncate max-w-[180px]">
+                              {p.name}
+                            </span>
+                          </Link>
+                        </td>
+                        <td className="px-3 py-3 hidden sm:table-cell">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusBadgeVariant[p.status] ?? "bg-muted text-muted-foreground"}`}>
+                            {p.status.replace("_", " ")}
+                          </span>
+                        </td>
+                        <td className="px-3 py-3 hidden md:table-cell">
+                          <span className={`text-xs font-medium capitalize ${priorityLabel[p.priority]}`}>
+                            {p.priority}
+                          </span>
+                        </td>
+                        <td className="px-5 py-3 text-right hidden lg:table-cell">
+                          {p.dueDate ? (
+                            <span className={`text-xs ${isOverdue ? "text-destructive font-medium" : "text-muted-foreground"}`}>
+                              {isOverdue ? "Overdue · " : ""}{formatDate(p.dueDate)}
+                            </span>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-4">
+
+            {/* Due soon */}
+            <div className="bg-card border rounded-xl overflow-hidden">
+              <div className="flex items-center gap-2 px-5 py-4 border-b">
+                <Clock className="h-4 w-4 text-muted-foreground" />
+                <h2 className="font-semibold text-foreground text-sm">Due in 14 days</h2>
+              </div>
+              {dueSoonProjects.length === 0 && overdueProjects.length === 0 ? (
+                <p className="px-5 py-4 text-xs text-muted-foreground">Nothing coming up</p>
+              ) : (
+                <ul className="divide-y divide-border">
+                  {[...overdueProjects, ...dueSoonProjects].slice(0, 5).map((p) => {
+                    const overdue = p.dueDate && new Date(p.dueDate) < now;
+                    return (
+                      <li key={p.id}>
+                        <Link href={`/projects/${p.id}`} className="flex items-center justify-between px-5 py-3 hover:bg-muted/30 transition-colors">
+                          <span className="text-sm font-medium text-foreground truncate max-w-[140px]">{p.name}</span>
+                          <span className={`text-xs shrink-0 ${overdue ? "text-destructive font-medium" : "text-muted-foreground"}`}>
+                            {p.dueDate ? formatDate(p.dueDate) : "—"}
+                          </span>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+
+            {/* Upcoming payments */}
+            <div className="bg-card border rounded-xl overflow-hidden">
+              <div className="px-5 py-4 border-b">
+                <h2 className="font-semibold text-foreground text-sm">Upcoming payments</h2>
+              </div>
+              {!upcomingPayments || upcomingPayments.length === 0 ? (
+                <p className="px-5 py-4 text-xs text-muted-foreground">No upcoming payments</p>
+              ) : (
+                <ul className="divide-y divide-border">
+                  {upcomingPayments.slice(0, 5).map((p) => (
+                    <li key={p.id} className="flex items-center justify-between px-5 py-3">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate max-w-[140px]">{p.description}</p>
+                        <p className="text-xs text-muted-foreground">{formatDate(p.date)}</p>
+                      </div>
+                      <span className={`text-sm font-semibold shrink-0 ${p.type === "income" ? "text-green-600" : "text-destructive"}`}>
+                        {p.type === "income" ? "+" : "-"}{formatCurrency(Number(p.amount))}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </>
   );

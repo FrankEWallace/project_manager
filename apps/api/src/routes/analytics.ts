@@ -19,8 +19,8 @@ export const analyticsRouter = new Hono()
 
       db
         .select({
-          totalIncome: sql<string>`coalesce(sum(case when t.type = 'income' then t.normalized_amount else 0 end), 0)`,
-          totalExpenses: sql<string>`coalesce(sum(case when t.type = 'expense' then t.normalized_amount else 0 end), 0)`,
+          totalIncome: sql<string>`coalesce(sum(case when ${transactions.type} = 'income' then ${transactions.normalizedAmount} else 0 end), 0)`,
+          totalExpenses: sql<string>`coalesce(sum(case when ${transactions.type} = 'expense' then ${transactions.normalizedAmount} else 0 end), 0)`,
         })
         .from(transactions)
         .innerJoin(projects, eq(transactions.projectId, projects.id))
@@ -62,8 +62,8 @@ export const analyticsRouter = new Hono()
       .select({
         categoryId: projects.categoryId,
         count: count(),
-        totalIncome: sql<string>`coalesce(sum(case when t.type = 'income' then t.normalized_amount else 0 end), 0)`,
-        totalExpenses: sql<string>`coalesce(sum(case when t.type = 'expense' then t.normalized_amount else 0 end), 0)`,
+        totalIncome: sql<string>`coalesce(sum(case when ${transactions.type} = 'income' then ${transactions.normalizedAmount} else 0 end), 0)`,
+        totalExpenses: sql<string>`coalesce(sum(case when ${transactions.type} = 'expense' then ${transactions.normalizedAmount} else 0 end), 0)`,
       })
       .from(projects)
       .leftJoin(transactions, eq(transactions.projectId, projects.id))
@@ -112,17 +112,19 @@ export const analyticsRouter = new Hono()
     const { workspaceId } = c.get("auth");
     const limit = Number(c.req.query("limit") ?? 5);
 
+    const expenseExpr = sql<string>`sum(case when ${transactions.type} = 'expense' then ${transactions.normalizedAmount} else 0 end)`;
+
     const rows = await db
       .select({
         projectId: transactions.projectId,
         projectName: projects.name,
-        totalExpenses: sql<string>`sum(case when t.type = 'expense' then t.normalized_amount else 0 end)`,
+        totalExpenses: expenseExpr,
       })
       .from(transactions)
       .innerJoin(projects, eq(transactions.projectId, projects.id))
       .where(eq(projects.workspaceId, workspaceId))
       .groupBy(transactions.projectId, projects.name)
-      .orderBy(sql`sum(case when t.type = 'expense' then t.normalized_amount else 0 end) desc`)
+      .orderBy(sql`sum(case when ${transactions.type} = 'expense' then ${transactions.normalizedAmount} else 0 end) desc`)
       .limit(limit);
 
     return c.json({ data: rows });
@@ -140,8 +142,8 @@ export const analyticsRouter = new Hono()
     const financials = (start: Date, end: Date) =>
       db
         .select({
-          income: sql<string>`coalesce(sum(case when t.type = 'income' then t.normalized_amount else 0 end), 0)`,
-          expenses: sql<string>`coalesce(sum(case when t.type = 'expense' then t.normalized_amount else 0 end), 0)`,
+          income: sql<string>`coalesce(sum(case when ${transactions.type} = 'income' then ${transactions.normalizedAmount} else 0 end), 0)`,
+          expenses: sql<string>`coalesce(sum(case when ${transactions.type} = 'expense' then ${transactions.normalizedAmount} else 0 end), 0)`,
         })
         .from(transactions)
         .innerJoin(projects, eq(transactions.projectId, projects.id))
@@ -203,13 +205,13 @@ export const analyticsRouter = new Hono()
       .select({
         projectId: transactions.projectId,
         projectName: projects.name,
-        totalIncome: sql<string>`coalesce(sum(case when t.type = 'income' then t.normalized_amount else 0 end), 0)`,
+        totalIncome: sql<string>`coalesce(sum(case when ${transactions.type} = 'income' then ${transactions.normalizedAmount} else 0 end), 0)`,
       })
       .from(transactions)
       .innerJoin(projects, eq(transactions.projectId, projects.id))
       .where(and(eq(projects.workspaceId, workspaceId), eq(projects.archived, false)))
       .groupBy(transactions.projectId, projects.name)
-      .orderBy(sql`sum(case when t.type = 'income' then t.normalized_amount else 0 end) desc`)
+      .orderBy(sql`sum(case when ${transactions.type} = 'income' then ${transactions.normalizedAmount} else 0 end) desc`)
       .limit(limit);
 
     const total = rows.reduce((sum, r) => sum + Number(r.totalIncome), 0);
@@ -268,17 +270,19 @@ export const analyticsRouter = new Hono()
       limit = 12;
     }
 
+    const truncExpr = sql`date_trunc(${truncFn}, ${transactions.date})::date`;
+
     const rows = await db
       .select({
-        period: sql<string>`date_trunc('${sql.raw(truncFn)}', t.date)::date`,
-        income: sql<string>`coalesce(sum(case when t.type = 'income' then t.normalized_amount else 0 end), 0)`,
-        expenses: sql<string>`coalesce(sum(case when t.type = 'expense' then t.normalized_amount else 0 end), 0)`,
+        period: sql<string>`date_trunc(${truncFn}, ${transactions.date})::date`,
+        income: sql<string>`coalesce(sum(case when ${transactions.type} = 'income' then ${transactions.normalizedAmount} else 0 end), 0)`,
+        expenses: sql<string>`coalesce(sum(case when ${transactions.type} = 'expense' then ${transactions.normalizedAmount} else 0 end), 0)`,
       })
       .from(transactions)
       .innerJoin(projects, eq(transactions.projectId, projects.id))
       .where(eq(projects.workspaceId, workspaceId))
-      .groupBy(sql`date_trunc('${sql.raw(truncFn)}', t.date)::date`)
-      .orderBy(sql`date_trunc('${sql.raw(truncFn)}', t.date)::date desc`)
+      .groupBy(truncExpr)
+      .orderBy(sql`${truncExpr} desc`)
       .limit(limit);
 
     return c.json({

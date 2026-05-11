@@ -3403,8 +3403,8 @@ var analyticsRouter = new Hono5().use(requireAuth).get("/portfolio", async (c) =
   const [statusCounts, financials, projectList] = await Promise.all([
     db.select({ status: projects.status, count: count2() }).from(projects).where(and7(eq7(projects.workspaceId, workspaceId), eq7(projects.archived, false))).groupBy(projects.status),
     db.select({
-      totalIncome: sql3`coalesce(sum(case when t.type = 'income' then t.normalized_amount else 0 end), 0)`,
-      totalExpenses: sql3`coalesce(sum(case when t.type = 'expense' then t.normalized_amount else 0 end), 0)`
+      totalIncome: sql3`coalesce(sum(case when ${transactions.type} = 'income' then ${transactions.normalizedAmount} else 0 end), 0)`,
+      totalExpenses: sql3`coalesce(sum(case when ${transactions.type} = 'expense' then ${transactions.normalizedAmount} else 0 end), 0)`
     }).from(transactions).innerJoin(projects, eq7(transactions.projectId, projects.id)).where(eq7(projects.workspaceId, workspaceId)),
     db.select({ id: projects.id, name: projects.name, status: projects.status, dueDate: projects.dueDate }).from(projects).where(and7(eq7(projects.workspaceId, workspaceId), eq7(projects.archived, false)))
   ]);
@@ -3431,8 +3431,8 @@ var analyticsRouter = new Hono5().use(requireAuth).get("/portfolio", async (c) =
   const rows = await db.select({
     categoryId: projects.categoryId,
     count: count2(),
-    totalIncome: sql3`coalesce(sum(case when t.type = 'income' then t.normalized_amount else 0 end), 0)`,
-    totalExpenses: sql3`coalesce(sum(case when t.type = 'expense' then t.normalized_amount else 0 end), 0)`
+    totalIncome: sql3`coalesce(sum(case when ${transactions.type} = 'income' then ${transactions.normalizedAmount} else 0 end), 0)`,
+    totalExpenses: sql3`coalesce(sum(case when ${transactions.type} = 'expense' then ${transactions.normalizedAmount} else 0 end), 0)`
   }).from(projects).leftJoin(transactions, eq7(transactions.projectId, projects.id)).where(and7(eq7(projects.workspaceId, workspaceId), eq7(projects.archived, false))).groupBy(projects.categoryId);
   return c.json({ data: rows });
 }).get("/milestones-summary", async (c) => {
@@ -3460,11 +3460,12 @@ var analyticsRouter = new Hono5().use(requireAuth).get("/portfolio", async (c) =
 }).get("/top-spending", async (c) => {
   const { workspaceId } = c.get("auth");
   const limit = Number(c.req.query("limit") ?? 5);
+  const expenseExpr = sql3`sum(case when ${transactions.type} = 'expense' then ${transactions.normalizedAmount} else 0 end)`;
   const rows = await db.select({
     projectId: transactions.projectId,
     projectName: projects.name,
-    totalExpenses: sql3`sum(case when t.type = 'expense' then t.normalized_amount else 0 end)`
-  }).from(transactions).innerJoin(projects, eq7(transactions.projectId, projects.id)).where(eq7(projects.workspaceId, workspaceId)).groupBy(transactions.projectId, projects.name).orderBy(sql3`sum(case when t.type = 'expense' then t.normalized_amount else 0 end) desc`).limit(limit);
+    totalExpenses: expenseExpr
+  }).from(transactions).innerJoin(projects, eq7(transactions.projectId, projects.id)).where(eq7(projects.workspaceId, workspaceId)).groupBy(transactions.projectId, projects.name).orderBy(sql3`sum(case when ${transactions.type} = 'expense' then ${transactions.normalizedAmount} else 0 end) desc`).limit(limit);
   return c.json({ data: rows });
 }).get("/trends", async (c) => {
   const { workspaceId } = c.get("auth");
@@ -3473,8 +3474,8 @@ var analyticsRouter = new Hono5().use(requireAuth).get("/portfolio", async (c) =
   const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const lastMonthEnd = thisMonthStart;
   const financials = (start, end) => db.select({
-    income: sql3`coalesce(sum(case when t.type = 'income' then t.normalized_amount else 0 end), 0)`,
-    expenses: sql3`coalesce(sum(case when t.type = 'expense' then t.normalized_amount else 0 end), 0)`
+    income: sql3`coalesce(sum(case when ${transactions.type} = 'income' then ${transactions.normalizedAmount} else 0 end), 0)`,
+    expenses: sql3`coalesce(sum(case when ${transactions.type} = 'expense' then ${transactions.normalizedAmount} else 0 end), 0)`
   }).from(transactions).innerJoin(projects, eq7(transactions.projectId, projects.id)).where(
     and7(
       eq7(projects.workspaceId, workspaceId),
@@ -3523,8 +3524,8 @@ var analyticsRouter = new Hono5().use(requireAuth).get("/portfolio", async (c) =
   const rows = await db.select({
     projectId: transactions.projectId,
     projectName: projects.name,
-    totalIncome: sql3`coalesce(sum(case when t.type = 'income' then t.normalized_amount else 0 end), 0)`
-  }).from(transactions).innerJoin(projects, eq7(transactions.projectId, projects.id)).where(and7(eq7(projects.workspaceId, workspaceId), eq7(projects.archived, false))).groupBy(transactions.projectId, projects.name).orderBy(sql3`sum(case when t.type = 'income' then t.normalized_amount else 0 end) desc`).limit(limit);
+    totalIncome: sql3`coalesce(sum(case when ${transactions.type} = 'income' then ${transactions.normalizedAmount} else 0 end), 0)`
+  }).from(transactions).innerJoin(projects, eq7(transactions.projectId, projects.id)).where(and7(eq7(projects.workspaceId, workspaceId), eq7(projects.archived, false))).groupBy(transactions.projectId, projects.name).orderBy(sql3`sum(case when ${transactions.type} = 'income' then ${transactions.normalizedAmount} else 0 end) desc`).limit(limit);
   const total = rows.reduce((sum, r) => sum + Number(r.totalIncome), 0);
   return c.json({
     data: rows.map((r) => ({
@@ -3564,11 +3565,12 @@ var analyticsRouter = new Hono5().use(requireAuth).get("/portfolio", async (c) =
     truncFn = "month";
     limit = 12;
   }
+  const truncExpr = sql3`date_trunc(${truncFn}, ${transactions.date})::date`;
   const rows = await db.select({
-    period: sql3`date_trunc('${sql3.raw(truncFn)}', t.date)::date`,
-    income: sql3`coalesce(sum(case when t.type = 'income' then t.normalized_amount else 0 end), 0)`,
-    expenses: sql3`coalesce(sum(case when t.type = 'expense' then t.normalized_amount else 0 end), 0)`
-  }).from(transactions).innerJoin(projects, eq7(transactions.projectId, projects.id)).where(eq7(projects.workspaceId, workspaceId)).groupBy(sql3`date_trunc('${sql3.raw(truncFn)}', t.date)::date`).orderBy(sql3`date_trunc('${sql3.raw(truncFn)}', t.date)::date desc`).limit(limit);
+    period: sql3`date_trunc(${truncFn}, ${transactions.date})::date`,
+    income: sql3`coalesce(sum(case when ${transactions.type} = 'income' then ${transactions.normalizedAmount} else 0 end), 0)`,
+    expenses: sql3`coalesce(sum(case when ${transactions.type} = 'expense' then ${transactions.normalizedAmount} else 0 end), 0)`
+  }).from(transactions).innerJoin(projects, eq7(transactions.projectId, projects.id)).where(eq7(projects.workspaceId, workspaceId)).groupBy(truncExpr).orderBy(sql3`${truncExpr} desc`).limit(limit);
   return c.json({
     data: rows.reverse().map((r) => ({
       period: r.period,
