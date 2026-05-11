@@ -78,15 +78,16 @@ export const projectsRouter = new Hono()
 
     if (!project) return c.json({ error: "Not found" }, 404);
 
-    const progress = await computeProjectProgress(id);
-
-    const [financials] = await db
-      .select({
-        totalIncome: sql<string>`coalesce(sum(case when type = 'income' then normalized_amount else 0 end), 0)`,
-        totalExpenses: sql<string>`coalesce(sum(case when type = 'expense' then normalized_amount else 0 end), 0)`,
-      })
-      .from(transactions)
-      .where(eq(transactions.projectId, id));
+    const [progress, [financials]] = await Promise.all([
+      computeProjectProgress(id),
+      db
+        .select({
+          totalIncome: sql<string>`coalesce(sum(case when type = 'income' then normalized_amount else 0 end), 0)`,
+          totalExpenses: sql<string>`coalesce(sum(case when type = 'expense' then normalized_amount else 0 end), 0)`,
+        })
+        .from(transactions)
+        .where(eq(transactions.projectId, id)),
+    ]);
 
     return c.json({
       data: {

@@ -1467,7 +1467,7 @@ var noop2 = () => {
 function Subscribe(postgres2, options) {
   const subscribers = /* @__PURE__ */ new Map(), slot = "postgresjs_" + Math.random().toString(36).slice(2), state = {};
   let connection2, stream, ended = false;
-  const sql4 = subscribe.sql = postgres2({
+  const sql5 = subscribe.sql = postgres2({
     ...options,
     transform: { column: {}, value: {}, row: {} },
     max: 1,
@@ -1483,18 +1483,18 @@ function Subscribe(postgres2, options) {
         return;
       stream = null;
       state.pid = state.secret = void 0;
-      connected(await init(sql4, slot, options.publications));
+      connected(await init(sql5, slot, options.publications));
       subscribers.forEach((event) => event.forEach(({ onsubscribe }) => onsubscribe()));
     },
     no_subscribe: true
   });
-  const end = sql4.end, close = sql4.close;
-  sql4.end = async () => {
+  const end = sql5.end, close = sql5.close;
+  sql5.end = async () => {
     ended = true;
     stream && await new Promise((r) => (stream.once("close", r), stream.end()));
     return end();
   };
-  sql4.close = async () => {
+  sql5.close = async () => {
     stream && await new Promise((r) => (stream.once("close", r), stream.end()));
     return close();
   };
@@ -1502,7 +1502,7 @@ function Subscribe(postgres2, options) {
   async function subscribe(event, fn, onsubscribe = noop2, onerror = noop2) {
     event = parseEvent(event);
     if (!connection2)
-      connection2 = init(sql4, slot, options.publications);
+      connection2 = init(sql5, slot, options.publications);
     const subscriber = { fn, onsubscribe };
     const fns = subscribers.has(event) ? subscribers.get(event).add(subscriber) : subscribers.set(event, /* @__PURE__ */ new Set([subscriber])).get(event);
     const unsubscribe = () => {
@@ -1513,7 +1513,7 @@ function Subscribe(postgres2, options) {
       connected(x);
       onsubscribe();
       stream && stream.on("error", onerror);
-      return { unsubscribe, state, sql: sql4 };
+      return { unsubscribe, state, sql: sql5 };
     });
   }
   function connected(x) {
@@ -1521,14 +1521,14 @@ function Subscribe(postgres2, options) {
     state.pid = x.state.pid;
     state.secret = x.state.secret;
   }
-  async function init(sql5, slot2, publications) {
+  async function init(sql6, slot2, publications) {
     if (!publications)
       throw new Error("Missing publication names");
-    const xs = await sql5.unsafe(
+    const xs = await sql6.unsafe(
       `CREATE_REPLICATION_SLOT ${slot2} TEMPORARY LOGICAL pgoutput NOEXPORT_SNAPSHOT`
     );
     const [x] = xs;
-    const stream2 = await sql5.unsafe(
+    const stream2 = await sql6.unsafe(
       `START_REPLICATION SLOT ${slot2} LOGICAL ${x.consistent_point} (proto_version '1', publication_names '${publications}')`
     ).writable();
     const state2 = {
@@ -1536,14 +1536,14 @@ function Subscribe(postgres2, options) {
     };
     stream2.on("data", data);
     stream2.on("error", error);
-    stream2.on("close", sql5.close);
+    stream2.on("close", sql6.close);
     return { stream: stream2, state: xs.state };
     function error(e) {
       console.error("Unexpected error during logical streaming - reconnecting", e);
     }
     function data(x2) {
       if (x2[0] === 119) {
-        parse(x2.subarray(25), state2, sql5.options.parsers, handle, options.transform);
+        parse(x2.subarray(25), state2, sql6.options.parsers, handle, options.transform);
       } else if (x2[0] === 107 && x2[17]) {
         state2.lsn = x2.subarray(1, 9);
         pong();
@@ -1675,22 +1675,22 @@ function parseEvent(x) {
 
 // ../../node_modules/.pnpm/postgres@3.4.9/node_modules/postgres/src/large.js
 import Stream2 from "stream";
-function largeObject(sql4, oid, mode = 131072 | 262144) {
+function largeObject(sql5, oid, mode = 131072 | 262144) {
   return new Promise(async (resolve, reject) => {
-    await sql4.begin(async (sql5) => {
+    await sql5.begin(async (sql6) => {
       let finish;
-      !oid && ([{ oid }] = await sql5`select lo_creat(-1) as oid`);
-      const [{ fd }] = await sql5`select lo_open(${oid}, ${mode}) as fd`;
+      !oid && ([{ oid }] = await sql6`select lo_creat(-1) as oid`);
+      const [{ fd }] = await sql6`select lo_open(${oid}, ${mode}) as fd`;
       const lo = {
         writable,
         readable,
-        close: () => sql5`select lo_close(${fd})`.then(finish),
-        tell: () => sql5`select lo_tell64(${fd})`,
-        read: (x) => sql5`select loread(${fd}, ${x}) as data`,
-        write: (x) => sql5`select lowrite(${fd}, ${x})`,
-        truncate: (x) => sql5`select lo_truncate64(${fd}, ${x})`,
-        seek: (x, whence = 0) => sql5`select lo_lseek64(${fd}, ${x}, ${whence})`,
-        size: () => sql5`
+        close: () => sql6`select lo_close(${fd})`.then(finish),
+        tell: () => sql6`select lo_tell64(${fd})`,
+        read: (x) => sql6`select loread(${fd}, ${x}) as data`,
+        write: (x) => sql6`select lowrite(${fd}, ${x})`,
+        truncate: (x) => sql6`select lo_truncate64(${fd}, ${x})`,
+        seek: (x, whence = 0) => sql6`select lo_lseek64(${fd}, ${x}, ${whence})`,
+        size: () => sql6`
           select
             lo_lseek64(${fd}, location, 0) as position,
             seek.size
@@ -1765,12 +1765,12 @@ function Postgres(a, b2) {
   let ending = false;
   const queries = queue_default(), connecting = queue_default(), reserved = queue_default(), closed = queue_default(), ended = queue_default(), open = queue_default(), busy = queue_default(), full = queue_default(), queues = { connecting, reserved, closed, ended, open, busy, full };
   const connections = [...Array(options.max)].map(() => connection_default(options, queues, { onopen, onend, onclose }));
-  const sql4 = Sql(handler);
-  Object.assign(sql4, {
+  const sql5 = Sql(handler);
+  Object.assign(sql5, {
     get parameters() {
       return options.parameters;
     },
-    largeObject: largeObject.bind(null, sql4),
+    largeObject: largeObject.bind(null, sql5),
     subscribe,
     CLOSE,
     END: CLOSE,
@@ -1782,14 +1782,14 @@ function Postgres(a, b2) {
     close,
     end
   });
-  return sql4;
+  return sql5;
   function Sql(handler2) {
     handler2.debug = options.debug;
     Object.entries(options.types).reduce((acc, [name, type]) => {
       acc[name] = (x) => new Parameter(x, type.to);
       return acc;
     }, typed);
-    Object.assign(sql5, {
+    Object.assign(sql6, {
       types: typed,
       typed,
       unsafe,
@@ -1798,11 +1798,11 @@ function Postgres(a, b2) {
       json,
       file
     });
-    return sql5;
+    return sql6;
     function typed(value, type) {
       return new Parameter(value, type);
     }
-    function sql5(strings, ...args) {
+    function sql6(strings, ...args) {
       const query = strings && Array.isArray(strings.raw) ? new Query(strings, args, handler2, cancel) : typeof strings === "string" && !args.length ? new Identifier(options.transform.column.to ? options.transform.column.to(strings) : strings) : new Builder(strings, args);
       return query;
     }
@@ -1833,7 +1833,7 @@ function Postgres(a, b2) {
   }
   async function listen(name, fn, onlisten) {
     const listener = { fn, onlisten };
-    const sql5 = listen.sql || (listen.sql = Postgres({
+    const sql6 = listen.sql || (listen.sql = Postgres({
       ...options,
       max: 1,
       idle_timeout: null,
@@ -1857,7 +1857,7 @@ function Postgres(a, b2) {
       listener.onlisten && listener.onlisten();
       return { state: result2.state, unlisten };
     }
-    channels[name] = { result: sql5`listen ${sql5.unsafe('"' + name.replace(/"/g, '""') + '"')}`, listeners: [listener] };
+    channels[name] = { result: sql6`listen ${sql6.unsafe('"' + name.replace(/"/g, '""') + '"')}`, listeners: [listener] };
     const result = await channels[name].result;
     listener.onlisten && listener.onlisten();
     return { state: result.state, unlisten };
@@ -1868,11 +1868,11 @@ function Postgres(a, b2) {
       if (channels[name].listeners.length)
         return;
       delete channels[name];
-      return sql5`unlisten ${sql5.unsafe('"' + name.replace(/"/g, '""') + '"')}`;
+      return sql6`unlisten ${sql6.unsafe('"' + name.replace(/"/g, '""') + '"')}`;
     }
   }
   async function notify(channel, payload) {
-    return await sql4`select pg_notify(${channel}, ${"" + payload})`;
+    return await sql5`select pg_notify(${channel}, ${"" + payload})`;
   }
   async function reserve() {
     const queue = queue_default();
@@ -1884,12 +1884,12 @@ function Postgres(a, b2) {
     move(c, reserved);
     c.reserved = () => queue.length ? c.execute(queue.shift()) : move(c, reserved);
     c.reserved.release = true;
-    const sql5 = Sql(handler2);
-    sql5.release = () => {
+    const sql6 = Sql(handler2);
+    sql6.release = () => {
       c.reserved = null;
       onopen(c);
     };
-    return sql5;
+    return sql6;
     function handler2(q) {
       c.queue === full ? queue.push(q) : c.execute(q) || move(c, full);
     }
@@ -1899,7 +1899,7 @@ function Postgres(a, b2) {
     const queries2 = queue_default();
     let savepoints = 0, connection2, prepare = null;
     try {
-      await sql4.unsafe("begin " + options2.replace(/[^a-z ]/ig, ""), [], { onexecute }).execute();
+      await sql5.unsafe("begin " + options2.replace(/[^a-z ]/ig, ""), [], { onexecute }).execute();
       return await Promise.race([
         scope(connection2, fn),
         new Promise((_, reject) => connection2.onclose = reject)
@@ -1908,29 +1908,29 @@ function Postgres(a, b2) {
       throw error;
     }
     async function scope(c, fn2, name) {
-      const sql5 = Sql(handler2);
-      sql5.savepoint = savepoint;
-      sql5.prepare = (x) => prepare = x.replace(/[^a-z0-9$-_. ]/gi);
+      const sql6 = Sql(handler2);
+      sql6.savepoint = savepoint;
+      sql6.prepare = (x) => prepare = x.replace(/[^a-z0-9$-_. ]/gi);
       let uncaughtError, result;
-      name && await sql5`savepoint ${sql5(name)}`;
+      name && await sql6`savepoint ${sql6(name)}`;
       try {
         result = await new Promise((resolve, reject) => {
-          const x = fn2(sql5);
+          const x = fn2(sql6);
           Promise.resolve(Array.isArray(x) ? Promise.all(x) : x).then(resolve, reject);
         });
         if (uncaughtError)
           throw uncaughtError;
       } catch (e) {
-        await (name ? sql5`rollback to ${sql5(name)}` : sql5`rollback`);
+        await (name ? sql6`rollback to ${sql6(name)}` : sql6`rollback`);
         throw e instanceof PostgresError && e.code === "25P02" && uncaughtError || e;
       }
       if (!name) {
-        prepare ? await sql5`prepare transaction '${sql5.unsafe(prepare)}'` : await sql5`commit`;
+        prepare ? await sql6`prepare transaction '${sql6.unsafe(prepare)}'` : await sql6`commit`;
       }
       return result;
       function savepoint(name2, fn3) {
         if (name2 && Array.isArray(name2.raw))
-          return savepoint((sql6) => sql6.apply(sql6, arguments));
+          return savepoint((sql7) => sql7.apply(sql7, arguments));
         arguments.length === 1 && (fn3 = name2, name2 = null);
         return scope(c, fn3, "s" + savepoints++ + (name2 ? "_" + name2 : ""));
       }
@@ -2696,7 +2696,12 @@ var actorsRelations = relations(actors, ({ many }) => ({
 if (!process.env["DATABASE_URL"]) {
   throw new Error("DATABASE_URL environment variable is required");
 }
-var queryClient = src_default(process.env["DATABASE_URL"]);
+var queryClient = src_default(process.env["DATABASE_URL"], {
+  max: 10,
+  idle_timeout: 20,
+  connect_timeout: 10,
+  prepare: false
+});
 var db = drizzle(queryClient, { schema: schema_exports });
 
 // src/lib/auth.ts
@@ -2908,7 +2913,7 @@ var upsertInvoiceSettingsSchema = z.object({
 });
 
 // src/routes/projects.ts
-import { eq as eq3, and as and3, sql, desc } from "drizzle-orm";
+import { eq as eq3, and as and3, sql as sql2, desc } from "drizzle-orm";
 
 // src/middleware/auth.ts
 import { eq, and } from "drizzle-orm";
@@ -2948,8 +2953,8 @@ function requireRole(...roles) {
 }
 
 // src/lib/audit.ts
-async function writeAuditLog(params) {
-  await db.insert(auditLogs).values({
+function writeAuditLog(params) {
+  db.insert(auditLogs).values({
     workspaceId: params.workspaceId,
     userId: params.userId ?? null,
     entity: params.entity,
@@ -2961,26 +2966,15 @@ async function writeAuditLog(params) {
 }
 
 // src/lib/progress.ts
-import { eq as eq2, count, and as and2 } from "drizzle-orm";
-async function computePhaseProgress(phaseId) {
-  const [total, completed] = await Promise.all([
-    db.select({ count: count() }).from(milestones).where(eq2(milestones.phaseId, phaseId)),
-    db.select({ count: count() }).from(milestones).where(
-      and2(eq2(milestones.phaseId, phaseId), eq2(milestones.status, "completed"))
-    )
-  ]);
-  const totalCount = total[0]?.count ?? 0;
-  if (totalCount === 0) return 0;
-  return Math.round((completed[0]?.count ?? 0) / totalCount * 100);
-}
+import { eq as eq2, count, sql } from "drizzle-orm";
 async function computeProjectProgress(projectId) {
-  const projectPhases = await db.select({ id: phases.id }).from(phases).where(eq2(phases.projectId, projectId));
-  if (projectPhases.length === 0) return 0;
-  const phaseProgresses = await Promise.all(
-    projectPhases.map((p) => computePhaseProgress(p.id))
-  );
-  const avg = phaseProgresses.reduce((sum, p) => sum + p, 0) / phaseProgresses.length;
-  return Math.round(avg);
+  const [row] = await db.select({
+    total: count(),
+    completed: sql`count(*) filter (where ${milestones.status} = 'completed')`
+  }).from(milestones).innerJoin(phases, eq2(milestones.phaseId, phases.id)).where(eq2(phases.projectId, projectId));
+  const total = row?.total ?? 0;
+  if (total === 0) return 0;
+  return Math.round((row?.completed ?? 0) / total * 100);
 }
 
 // src/routes/projects.ts
@@ -3039,11 +3033,13 @@ var projectsRouter = new Hono().use(requireAuth).get("/", async (c) => {
     with: { category: true }
   });
   if (!project) return c.json({ error: "Not found" }, 404);
-  const progress = await computeProjectProgress(id);
-  const [financials] = await db.select({
-    totalIncome: sql`coalesce(sum(case when type = 'income' then normalized_amount else 0 end), 0)`,
-    totalExpenses: sql`coalesce(sum(case when type = 'expense' then normalized_amount else 0 end), 0)`
-  }).from(transactions).where(eq3(transactions.projectId, id));
+  const [progress, [financials]] = await Promise.all([
+    computeProjectProgress(id),
+    db.select({
+      totalIncome: sql2`coalesce(sum(case when type = 'income' then normalized_amount else 0 end), 0)`,
+      totalExpenses: sql2`coalesce(sum(case when type = 'expense' then normalized_amount else 0 end), 0)`
+    }).from(transactions).where(eq3(transactions.projectId, id))
+  ]);
   return c.json({
     data: {
       ...project,
@@ -3401,14 +3397,14 @@ var transactionsRouter = new Hono4().use("/projects/*", requireAuth).get("/proje
 
 // src/routes/analytics.ts
 import { Hono as Hono5 } from "hono";
-import { eq as eq7, sql as sql2, count as count2, and as and7, inArray, gte, lt, gt, desc as desc3 } from "drizzle-orm";
+import { eq as eq7, sql as sql3, count as count2, and as and7, inArray, gte, lt, gt, desc as desc3 } from "drizzle-orm";
 var analyticsRouter = new Hono5().use(requireAuth).get("/portfolio", async (c) => {
   const { workspaceId } = c.get("auth");
   const [statusCounts, financials, projectList] = await Promise.all([
     db.select({ status: projects.status, count: count2() }).from(projects).where(and7(eq7(projects.workspaceId, workspaceId), eq7(projects.archived, false))).groupBy(projects.status),
     db.select({
-      totalIncome: sql2`coalesce(sum(case when t.type = 'income' then t.normalized_amount else 0 end), 0)`,
-      totalExpenses: sql2`coalesce(sum(case when t.type = 'expense' then t.normalized_amount else 0 end), 0)`
+      totalIncome: sql3`coalesce(sum(case when t.type = 'income' then t.normalized_amount else 0 end), 0)`,
+      totalExpenses: sql3`coalesce(sum(case when t.type = 'expense' then t.normalized_amount else 0 end), 0)`
     }).from(transactions).innerJoin(projects, eq7(transactions.projectId, projects.id)).where(eq7(projects.workspaceId, workspaceId)),
     db.select({ id: projects.id, name: projects.name, status: projects.status, dueDate: projects.dueDate }).from(projects).where(and7(eq7(projects.workspaceId, workspaceId), eq7(projects.archived, false)))
   ]);
@@ -3435,8 +3431,8 @@ var analyticsRouter = new Hono5().use(requireAuth).get("/portfolio", async (c) =
   const rows = await db.select({
     categoryId: projects.categoryId,
     count: count2(),
-    totalIncome: sql2`coalesce(sum(case when t.type = 'income' then t.normalized_amount else 0 end), 0)`,
-    totalExpenses: sql2`coalesce(sum(case when t.type = 'expense' then t.normalized_amount else 0 end), 0)`
+    totalIncome: sql3`coalesce(sum(case when t.type = 'income' then t.normalized_amount else 0 end), 0)`,
+    totalExpenses: sql3`coalesce(sum(case when t.type = 'expense' then t.normalized_amount else 0 end), 0)`
   }).from(projects).leftJoin(transactions, eq7(transactions.projectId, projects.id)).where(and7(eq7(projects.workspaceId, workspaceId), eq7(projects.archived, false))).groupBy(projects.categoryId);
   return c.json({ data: rows });
 }).get("/milestones-summary", async (c) => {
@@ -3467,8 +3463,8 @@ var analyticsRouter = new Hono5().use(requireAuth).get("/portfolio", async (c) =
   const rows = await db.select({
     projectId: transactions.projectId,
     projectName: projects.name,
-    totalExpenses: sql2`sum(case when t.type = 'expense' then t.normalized_amount else 0 end)`
-  }).from(transactions).innerJoin(projects, eq7(transactions.projectId, projects.id)).where(eq7(projects.workspaceId, workspaceId)).groupBy(transactions.projectId, projects.name).orderBy(sql2`sum(case when t.type = 'expense' then t.normalized_amount else 0 end) desc`).limit(limit);
+    totalExpenses: sql3`sum(case when t.type = 'expense' then t.normalized_amount else 0 end)`
+  }).from(transactions).innerJoin(projects, eq7(transactions.projectId, projects.id)).where(eq7(projects.workspaceId, workspaceId)).groupBy(transactions.projectId, projects.name).orderBy(sql3`sum(case when t.type = 'expense' then t.normalized_amount else 0 end) desc`).limit(limit);
   return c.json({ data: rows });
 }).get("/trends", async (c) => {
   const { workspaceId } = c.get("auth");
@@ -3477,8 +3473,8 @@ var analyticsRouter = new Hono5().use(requireAuth).get("/portfolio", async (c) =
   const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const lastMonthEnd = thisMonthStart;
   const financials = (start, end) => db.select({
-    income: sql2`coalesce(sum(case when t.type = 'income' then t.normalized_amount else 0 end), 0)`,
-    expenses: sql2`coalesce(sum(case when t.type = 'expense' then t.normalized_amount else 0 end), 0)`
+    income: sql3`coalesce(sum(case when t.type = 'income' then t.normalized_amount else 0 end), 0)`,
+    expenses: sql3`coalesce(sum(case when t.type = 'expense' then t.normalized_amount else 0 end), 0)`
   }).from(transactions).innerJoin(projects, eq7(transactions.projectId, projects.id)).where(
     and7(
       eq7(projects.workspaceId, workspaceId),
@@ -3527,8 +3523,8 @@ var analyticsRouter = new Hono5().use(requireAuth).get("/portfolio", async (c) =
   const rows = await db.select({
     projectId: transactions.projectId,
     projectName: projects.name,
-    totalIncome: sql2`coalesce(sum(case when t.type = 'income' then t.normalized_amount else 0 end), 0)`
-  }).from(transactions).innerJoin(projects, eq7(transactions.projectId, projects.id)).where(and7(eq7(projects.workspaceId, workspaceId), eq7(projects.archived, false))).groupBy(transactions.projectId, projects.name).orderBy(sql2`sum(case when t.type = 'income' then t.normalized_amount else 0 end) desc`).limit(limit);
+    totalIncome: sql3`coalesce(sum(case when t.type = 'income' then t.normalized_amount else 0 end), 0)`
+  }).from(transactions).innerJoin(projects, eq7(transactions.projectId, projects.id)).where(and7(eq7(projects.workspaceId, workspaceId), eq7(projects.archived, false))).groupBy(transactions.projectId, projects.name).orderBy(sql3`sum(case when t.type = 'income' then t.normalized_amount else 0 end) desc`).limit(limit);
   const total = rows.reduce((sum, r) => sum + Number(r.totalIncome), 0);
   return c.json({
     data: rows.map((r) => ({
@@ -3569,10 +3565,10 @@ var analyticsRouter = new Hono5().use(requireAuth).get("/portfolio", async (c) =
     limit = 12;
   }
   const rows = await db.select({
-    period: sql2`date_trunc('${sql2.raw(truncFn)}', t.date)::date`,
-    income: sql2`coalesce(sum(case when t.type = 'income' then t.normalized_amount else 0 end), 0)`,
-    expenses: sql2`coalesce(sum(case when t.type = 'expense' then t.normalized_amount else 0 end), 0)`
-  }).from(transactions).innerJoin(projects, eq7(transactions.projectId, projects.id)).where(eq7(projects.workspaceId, workspaceId)).groupBy(sql2`date_trunc('${sql2.raw(truncFn)}', t.date)::date`).orderBy(sql2`date_trunc('${sql2.raw(truncFn)}', t.date)::date desc`).limit(limit);
+    period: sql3`date_trunc('${sql3.raw(truncFn)}', t.date)::date`,
+    income: sql3`coalesce(sum(case when t.type = 'income' then t.normalized_amount else 0 end), 0)`,
+    expenses: sql3`coalesce(sum(case when t.type = 'expense' then t.normalized_amount else 0 end), 0)`
+  }).from(transactions).innerJoin(projects, eq7(transactions.projectId, projects.id)).where(eq7(projects.workspaceId, workspaceId)).groupBy(sql3`date_trunc('${sql3.raw(truncFn)}', t.date)::date`).orderBy(sql3`date_trunc('${sql3.raw(truncFn)}', t.date)::date desc`).limit(limit);
   return c.json({
     data: rows.reverse().map((r) => ({
       period: r.period,
@@ -4002,7 +3998,7 @@ var tasksRouter = new Hono10().use(requireAuth).get("/:projectId/tasks", async (
 // src/routes/invoices.ts
 import { Hono as Hono11 } from "hono";
 import { zValidator as zValidator9 } from "@hono/zod-validator";
-import { eq as eq13, and as and12, desc as desc4, sql as sql3 } from "drizzle-orm";
+import { eq as eq13, and as and12, desc as desc4, sql as sql4 } from "drizzle-orm";
 var invoicesRouter = new Hono11().use(requireAuth).get("/settings", async (c) => {
   const { workspaceId } = c.get("auth");
   const settings = await db.query.invoiceSettings.findFirst({
@@ -4060,7 +4056,7 @@ var invoicesRouter = new Hono11().use(requireAuth).get("/settings", async (c) =>
   });
   if (!workspace) return c.json({ error: "Workspace not found" }, 404);
   await db.insert(invoiceSettings).values({ workspaceId, nextSequenceNumber: 1 }).onConflictDoNothing();
-  const [settings] = await db.update(invoiceSettings).set({ nextSequenceNumber: sql3`${invoiceSettings.nextSequenceNumber} + 1`, updatedAt: /* @__PURE__ */ new Date() }).where(eq13(invoiceSettings.workspaceId, workspaceId)).returning();
+  const [settings] = await db.update(invoiceSettings).set({ nextSequenceNumber: sql4`${invoiceSettings.nextSequenceNumber} + 1`, updatedAt: /* @__PURE__ */ new Date() }).where(eq13(invoiceSettings.workspaceId, workspaceId)).returning();
   const sequenceNumber = settings.nextSequenceNumber - 1;
   const invoiceNumber = `${settings.invoicePrefix}-${String(sequenceNumber).padStart(3, "0")}`;
   const subtotal = body.items.reduce((sum, item) => sum + item.quantity * item.rate, 0);
