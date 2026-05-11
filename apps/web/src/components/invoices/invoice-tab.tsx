@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatCurrency } from "@/lib/utils";
-import { Plus, Send, Ban, CircleDollarSign, Eye } from "lucide-react";
+import { Plus, Send, Ban, CircleDollarSign, Eye, Settings2 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -150,12 +150,20 @@ export function InvoiceTab() {
             </button>
           ))}
         </div>
-        <Button size="sm" asChild>
-          <Link href="/finances/invoices/new">
-            <Plus className="h-4 w-4 mr-1.5" />
-            New invoice
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" asChild>
+            <Link href="/finances/invoices/settings">
+              <Settings2 className="h-4 w-4 mr-1.5" />
+              Settings
+            </Link>
+          </Button>
+          <Button size="sm" asChild>
+            <Link href="/finances/invoices/new">
+              <Plus className="h-4 w-4 mr-1.5" />
+              New invoice
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <Card>
