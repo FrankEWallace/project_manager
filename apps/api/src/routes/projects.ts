@@ -148,6 +148,29 @@ export const projectsRouter = new Hono()
     return c.json({ data: updated });
   })
 
+  .delete("/:id", requireRole("admin", "owner"), async (c) => {
+    const { workspaceId, userId } = c.get("auth");
+    const { id } = c.req.param();
+
+    const existing = await db.query.projects.findFirst({
+      where: and(eq(projects.id, id), eq(projects.workspaceId, workspaceId)),
+    });
+    if (!existing) return c.json({ error: "Not found" }, 404);
+
+    await db.delete(projects).where(eq(projects.id, id));
+
+    await writeAuditLog({
+      workspaceId,
+      userId,
+      entity: "project",
+      entityId: id,
+      action: "deleted",
+      diff: { before: existing },
+    });
+
+    return c.json({ success: true });
+  })
+
   .post("/:id/archive", requireRole("admin", "owner"), async (c) => {
     const { workspaceId, userId } = c.get("auth");
     const { id } = c.req.param();

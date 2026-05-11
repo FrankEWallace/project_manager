@@ -228,10 +228,10 @@ export default function NewInvoicePage() {
 
               <div className="space-y-1.5">
                 <Label>Project (optional)</Label>
-                <Select value={projectId} onValueChange={setProjectId}>
+                <Select value={projectId || "none"} onValueChange={(v) => setProjectId(v === "none" ? "" : v)}>
                   <SelectTrigger><SelectValue placeholder="Link to project…" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="none">None</SelectItem>
                     {(projects ?? []).map((p) => (
                       <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                     ))}

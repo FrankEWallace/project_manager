@@ -1,9 +1,10 @@
 "use client";
 
-import { useApi } from "@/hooks/use-api";
+import { useApi, useMutation } from "@/hooks/use-api";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import { Plus, FolderKanban, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Plus, FolderKanban, ArrowUpDown, ArrowUp, ArrowDown, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useState, useMemo } from "react";
 
@@ -63,11 +64,51 @@ function SortIcon({ col, active, dir }: { col: string; active: SortKey; dir: Sor
     : <ArrowDown className="h-3.5 w-3.5 text-primary" />;
 }
 
+function DeleteProjectDialog({
+  project,
+  onClose,
+  onSuccess,
+}: {
+  project: Project | null;
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
+  const { mutate, loading } = useMutation<object, unknown>(
+    `/api/projects/${project?.id}`,
+    "DELETE"
+  );
+
+  async function handleDelete() {
+    const result = await mutate({});
+    if (result !== null) { onSuccess(); onClose(); }
+  }
+
+  return (
+    <Dialog open={!!project} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Delete project?</DialogTitle>
+        </DialogHeader>
+        <p className="text-sm text-muted-foreground">
+          <strong className="text-foreground">{project?.name}</strong> will be permanently deleted. This cannot be undone.
+        </p>
+        <div className="flex justify-end gap-2 pt-2">
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button variant="destructive" onClick={handleDelete} disabled={loading}>
+            {loading ? "Deleting…" : "Delete"}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function ProjectsPage() {
-  const { data: projects, loading } = useApi<Project[]>("/api/projects");
+  const { data: projects, loading, refetch } = useApi<Project[]>("/api/projects");
   const [sortKey, setSortKey] = useState<SortKey>("createdAt");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [deleteProject, setDeleteProject] = useState<Project | null>(null);
 
   const now = new Date();
 
@@ -205,6 +246,7 @@ export default function ProjectsPage() {
                     </button>
                   </th>
                 ))}
+                <th className="px-4 py-3 w-10" />
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -278,6 +320,16 @@ export default function ProjectsPage() {
                     <td className="px-4 py-3.5 hidden xl:table-cell text-right">
                       <span className="text-xs text-muted-foreground">{formatDate(project.createdAt)}</span>
                     </td>
+
+                    {/* Actions */}
+                    <td className="px-2 py-3.5 text-right">
+                      <button
+                        onClick={(e) => { e.preventDefault(); setDeleteProject(project); }}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </td>
                   </tr>
                 );
               })}
@@ -292,6 +344,12 @@ export default function ProjectsPage() {
           </div>
         </div>
       )}
+
+      <DeleteProjectDialog
+        project={deleteProject}
+        onClose={() => setDeleteProject(null)}
+        onSuccess={refetch}
+      />
     </div>
   );
 }

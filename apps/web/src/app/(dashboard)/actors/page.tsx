@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { useApi, useMutation } from "@/hooks/use-api";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,8 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Separator } from "@/components/ui/separator";
-import { Plus, Mail, Phone, Building2, User, Pencil, Trash2, Search } from "lucide-react";
+import { Plus, Mail, Phone, Building2, User, Pencil, Trash2, Search, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -43,10 +41,6 @@ const typeColors: Record<string, string> = {
   advisor: "bg-purple-500/10 text-purple-700",
   investor: "bg-yellow-500/10 text-yellow-700",
 };
-
-function typeInitials(type: string): string {
-  return type[0]?.toUpperCase() ?? "?";
-}
 
 function nameInitials(name: string): string {
   return name
@@ -225,89 +219,16 @@ function DeleteDialog({
   );
 }
 
-// ─── Actor Card ───────────────────────────────────────────────────────────────
+// ─── Sort helpers ─────────────────────────────────────────────────────────────
 
-function ActorCard({
-  actor,
-  onEdit,
-  onDelete,
-}: {
-  actor: Actor;
-  onEdit: (a: Actor) => void;
-  onDelete: (a: Actor) => void;
-}) {
-  return (
-    <Card className="group">
-      <CardContent className="pt-5">
-        <div className="flex items-start gap-4">
-          <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-semibold shrink-0">
-            {nameInitials(actor.name)}
-          </div>
+type SortKey = "name" | "type" | "company";
+type SortDir = "asc" | "desc";
 
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <p className="font-semibold text-foreground truncate">{actor.name}</p>
-                {actor.company && (
-                  <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                    <Building2 className="h-3 w-3" /> {actor.company}
-                  </p>
-                )}
-              </div>
-              <div className="flex items-center gap-1 shrink-0">
-                <Badge className={`text-xs ${typeColors[actor.type] ?? ""}`}>
-                  {actor.type}
-                </Badge>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={() => onEdit(actor)}
-                >
-                  <Pencil className="h-3.5 w-3.5" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive"
-                  onClick={() => onDelete(actor)}
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            </div>
-
-            <div className="mt-3 space-y-1">
-              {actor.email && (
-                <a
-                  href={`mailto:${actor.email}`}
-                  className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <Mail className="h-3 w-3 shrink-0" />
-                  {actor.email}
-                </a>
-              )}
-              {actor.phone && (
-                <a
-                  href={`tel:${actor.phone}`}
-                  className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <Phone className="h-3 w-3 shrink-0" />
-                  {actor.phone}
-                </a>
-              )}
-            </div>
-
-            {actor.notes && (
-              <p className="mt-3 text-xs text-muted-foreground line-clamp-2 border-t border-border pt-2">
-                {actor.notes}
-              </p>
-            )}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
+function SortIcon({ col, active, dir }: { col: string; active: SortKey; dir: SortDir }) {
+  if (col !== active) return <ArrowUpDown className="h-3.5 w-3.5 opacity-40" />;
+  return dir === "asc"
+    ? <ArrowUp className="h-3.5 w-3.5 text-primary" />
+    : <ArrowDown className="h-3.5 w-3.5 text-primary" />;
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -319,10 +240,21 @@ export default function ActorsPage() {
   const [showAdd, setShowAdd] = React.useState(false);
   const [editActor, setEditActor] = React.useState<Actor | null>(null);
   const [deleteActor, setDeleteActor] = React.useState<Actor | null>(null);
+  const [sortKey, setSortKey] = React.useState<SortKey>("name");
+  const [sortDir, setSortDir] = React.useState<SortDir>("asc");
+
+  function handleSort(key: SortKey) {
+    if (key === sortKey) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+  }
 
   const filtered = React.useMemo(() => {
     if (!actors) return [];
-    return actors.filter((a) => {
+    const list = actors.filter((a) => {
       const matchSearch = !search ||
         a.name.toLowerCase().includes(search.toLowerCase()) ||
         a.email?.toLowerCase().includes(search.toLowerCase()) ||
@@ -330,7 +262,14 @@ export default function ActorsPage() {
       const matchType = typeFilter === "all" || a.type === typeFilter;
       return matchSearch && matchType;
     });
-  }, [actors, search, typeFilter]);
+    return [...list].sort((a, b) => {
+      let cmp = 0;
+      if (sortKey === "name") cmp = a.name.localeCompare(b.name);
+      else if (sortKey === "type") cmp = a.type.localeCompare(b.type);
+      else if (sortKey === "company") cmp = (a.company ?? "").localeCompare(b.company ?? "");
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+  }, [actors, search, typeFilter, sortKey, sortDir]);
 
   const countByType = React.useMemo(() => {
     const counts: Record<string, number> = {};
@@ -400,26 +339,17 @@ export default function ActorsPage() {
         </Select>
       </div>
 
-      {/* Grid */}
+      {/* Table */}
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="h-36 bg-muted animate-pulse rounded-xl" />
-          ))}
+        <div className="border rounded-xl overflow-hidden bg-card">
+          <div className="p-5 space-y-3">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="h-12 bg-muted animate-pulse rounded-lg" />
+            ))}
+          </div>
         </div>
-      ) : filtered.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map((actor) => (
-            <ActorCard
-              key={actor.id}
-              actor={actor}
-              onEdit={setEditActor}
-              onDelete={setDeleteActor}
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
+      ) : filtered.length === 0 ? (
+        <div className="border rounded-xl bg-card flex flex-col items-center justify-center py-20 text-center">
           <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-4">
             <User className="h-6 w-6 text-muted-foreground" />
           </div>
@@ -437,6 +367,118 @@ export default function ActorsPage() {
               Add your first actor
             </Button>
           )}
+        </div>
+      ) : (
+        <div className="border rounded-xl overflow-hidden bg-card">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-muted/40">
+                {(["name", "type", "company"] as SortKey[]).map((key) => (
+                  <th
+                    key={key}
+                    className="px-4 py-3 text-xs font-medium text-muted-foreground text-left whitespace-nowrap"
+                  >
+                    <button
+                      onClick={() => handleSort(key)}
+                      className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors capitalize"
+                    >
+                      {key}
+                      <SortIcon col={key} active={sortKey} dir={sortDir} />
+                    </button>
+                  </th>
+                ))}
+                <th className="px-4 py-3 text-xs font-medium text-muted-foreground text-left hidden sm:table-cell">Contact</th>
+                <th className="px-4 py-3 text-xs font-medium text-muted-foreground text-left hidden lg:table-cell">Notes</th>
+                <th className="px-4 py-3 w-20" />
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {filtered.map((actor) => (
+                <tr key={actor.id} className="hover:bg-muted/30 transition-colors group">
+                  {/* Name */}
+                  <td className="px-4 py-3.5">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-semibold shrink-0">
+                        {nameInitials(actor.name)}
+                      </div>
+                      <span className="font-medium text-foreground truncate max-w-[160px]">{actor.name}</span>
+                    </div>
+                  </td>
+
+                  {/* Type */}
+                  <td className="px-4 py-3.5">
+                    <Badge className={`text-xs ${typeColors[actor.type] ?? ""}`}>
+                      {actor.type}
+                    </Badge>
+                  </td>
+
+                  {/* Company */}
+                  <td className="px-4 py-3.5">
+                    {actor.company ? (
+                      <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                        <Building2 className="h-3.5 w-3.5 shrink-0" />
+                        {actor.company}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </td>
+
+                  {/* Contact */}
+                  <td className="px-4 py-3.5 hidden sm:table-cell">
+                    <div className="space-y-0.5">
+                      {actor.email && (
+                        <a href={`mailto:${actor.email}`} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                          <Mail className="h-3 w-3 shrink-0" />
+                          {actor.email}
+                        </a>
+                      )}
+                      {actor.phone && (
+                        <a href={`tel:${actor.phone}`} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                          <Phone className="h-3 w-3 shrink-0" />
+                          {actor.phone}
+                        </a>
+                      )}
+                      {!actor.email && !actor.phone && <span className="text-xs text-muted-foreground">—</span>}
+                    </div>
+                  </td>
+
+                  {/* Notes */}
+                  <td className="px-4 py-3.5 hidden lg:table-cell max-w-[200px]">
+                    {actor.notes ? (
+                      <span className="text-xs text-muted-foreground line-clamp-1">{actor.notes}</span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
+                  </td>
+
+                  {/* Actions */}
+                  <td className="px-2 py-3.5 text-right">
+                    <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => setEditActor(actor)}
+                        className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => setDeleteActor(actor)}
+                        className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <div className="border-t px-4 py-3 bg-muted/20">
+            <p className="text-xs text-muted-foreground">
+              Showing {filtered.length} of {actors?.length ?? 0} actors
+            </p>
+          </div>
         </div>
       )}
 
