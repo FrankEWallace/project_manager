@@ -1,5 +1,5 @@
 import {
-  pgTable, text, timestamp, boolean, integer, pgEnum, numeric,
+  pgTable, text, timestamp, boolean, integer, pgEnum, numeric, index,
 } from "drizzle-orm/pg-core";
 import { createId } from "@paralleldrive/cuid2";
 import { workspaces, categories, currencyCodeEnum } from "./workspace.ts";
@@ -43,7 +43,11 @@ export const projects = pgTable("projects", {
   createdBy: text("created_by").notNull(), // Better Auth user.id
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [
+  index("projects_workspace_id_idx").on(t.workspaceId),
+  index("projects_workspace_status_idx").on(t.workspaceId, t.status),
+  index("projects_workspace_archived_idx").on(t.workspaceId, t.archived),
+]);
 
 export const projectActors = pgTable("project_actors", {
   id: text("id").primaryKey().$defaultFn(() => createId()),
@@ -77,7 +81,9 @@ export const phases = pgTable("phases", {
   completedAt: timestamp("completed_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [
+  index("phases_project_id_idx").on(t.projectId),
+]);
 
 export const milestoneStatusEnum = pgEnum("milestone_status", [
   "open", "completed",
@@ -96,7 +102,10 @@ export const milestones = pgTable("milestones", {
   assignedTo: text("assigned_to"), // Better Auth user.id
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [
+  index("milestones_project_id_idx").on(t.projectId),
+  index("milestones_phase_id_idx").on(t.phaseId),
+]);
 
 export const taskStatusEnum = pgEnum("task_status", [
   "todo", "in_progress", "done", "cancelled",

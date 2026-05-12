@@ -15,6 +15,13 @@
       "when": 1778431973855,
       "tag": "0001_nice_alex_wilder",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1778588477203,
+      "tag": "0002_curly_cyclops",
+      "breakpoints": true
     }
   ]
 }

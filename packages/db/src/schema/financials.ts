@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, pgEnum, numeric } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, pgEnum, numeric, index } from "drizzle-orm/pg-core";
 import { createId } from "@paralleldrive/cuid2";
 import { currencyCodeEnum } from "./workspace.ts";
 import { projects, phases, milestones, tasks } from "./projects.ts";
@@ -35,4 +35,7 @@ export const transactions = pgTable("transactions", {
   createdBy: text("created_by").notNull(), // Better Auth user.id
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [
+  index("transactions_project_id_idx").on(t.projectId),
+  index("transactions_date_idx").on(t.date),
+]);

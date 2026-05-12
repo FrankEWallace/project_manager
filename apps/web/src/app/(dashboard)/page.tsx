@@ -2,7 +2,6 @@
 
 import { WorkspaceInit } from "@/components/workspace-init";
 import { useApi } from "@/hooks/use-api";
-import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { AlertTriangle, ArrowUpRight, ArrowDownRight, Minus, TrendingUp, FolderKanban, CheckSquare, Clock } from "lucide-react";
 import Link from "next/link";
@@ -10,45 +9,40 @@ import { Button } from "@/components/ui/button";
 import { OnboardingChecklist } from "@/components/ui/onboarding-checklist";
 import { useSession } from "@/lib/auth-client";
 
-interface Portfolio {
-  statusBreakdown: { status: string; count: number }[];
-  overdue: number;
-  totalProjects: number;
-  financials: { totalIncome: number; totalExpenses: number; profit: number };
-}
-
-interface Trends {
-  income: { current: number; previous: number; pct: number | null };
-  expenses: { current: number; previous: number; pct: number | null };
-  profit: { current: number; previous: number; pct: number | null };
-  activeProjects: { current: number; previous: number; pct: number | null };
-}
-
-interface Project {
-  id: string;
-  name: string;
-  status: string;
-  health: string;
-  priority: string;
-  budget: string | null;
-  dueDate: string | null;
-  createdAt: string;
-}
-
-interface MilestonesSummary {
-  total: number;
-  completed: number;
-  completionRate: number;
-}
-
-interface UpcomingPayment {
-  id: string;
-  description: string;
-  type: "income" | "expense";
-  amount: string;
-  currency: string;
-  date: string;
-  projectName: string;
+interface Dashboard {
+  portfolio: {
+    statusBreakdown: { status: string; count: number }[];
+    overdue: number;
+    totalProjects: number;
+    financials: { totalIncome: number; totalExpenses: number; profit: number };
+  };
+  trends: {
+    income: { current: number; previous: number; pct: number | null };
+    expenses: { current: number; previous: number; pct: number | null };
+    profit: { current: number; previous: number; pct: number | null };
+    activeProjects: { current: number; previous: number; pct: number | null };
+  };
+  projects: {
+    id: string;
+    name: string;
+    status: string;
+    health: string;
+    priority: string;
+    budget: string | null;
+    dueDate: string | null;
+    createdAt: string;
+  }[];
+  milestones: { total: number; completed: number; completionRate: number };
+  upcomingPayments: {
+    id: string;
+    description: string;
+    type: "income" | "expense";
+    amount: string;
+    currency: string;
+    date: string;
+    projectName: string;
+  }[];
+  onboarding: { hasProject: boolean; hasActor: boolean; hasMember: boolean };
 }
 
 function Skeleton({ className = "" }: { className?: string }) {
@@ -100,27 +94,30 @@ const priorityLabel: Record<string, string> = {
 
 export default function DashboardPage() {
   const { data: session } = useSession();
-  const { data: portfolio, loading: pLoading } = useApi<Portfolio>("/api/analytics/portfolio");
-  const { data: trends, loading: tLoading } = useApi<Trends>("/api/analytics/trends");
-  const { data: projects } = useApi<Project[]>("/api/projects");
-  const { data: milestones } = useApi<MilestonesSummary>("/api/analytics/milestones-summary");
-  const { data: upcomingPayments } = useApi<UpcomingPayment[]>("/api/analytics/upcoming-payments");
-  const { data: actors } = useApi<{ id: string }[]>("/api/actors");
-  const { data: members } = useApi<{ id: string }[]>("/api/invitations/members");
+  const { data, loading } = useApi<Dashboard>("/api/analytics/dashboard");
 
-  const loading = pLoading || tLoading;
+  const portfolio = data?.portfolio;
+  const trends = data?.trends;
+  const projects = data?.projects ?? [];
+  const milestones = data?.milestones;
+  const upcomingPayments = data?.upcomingPayments ?? [];
+  const onboarding = data?.onboarding;
+
+  const now = new Date();
 
   const active = portfolio?.statusBreakdown.find((s) => s.status === "active")?.count ?? 0;
   const completed = portfolio?.statusBreakdown.find((s) => s.status === "completed")?.count ?? 0;
   const onHold = portfolio?.statusBreakdown.find((s) => s.status === "on_hold")?.count ?? 0;
 
-  const now = new Date();
-  const recentProjects = [...(projects ?? [])].slice(0, 6);
-  const overdueProjects = (projects ?? []).filter(
+  const recentProjects = projects.slice(0, 6);
+  const overdueProjects = projects.filter(
     (p) => p.status === "active" && p.dueDate && new Date(p.dueDate) < now
   );
-  const dueSoonProjects = (projects ?? []).filter(
-    (p) => p.status === "active" && p.dueDate && new Date(p.dueDate) >= now &&
+  const dueSoonProjects = projects.filter(
+    (p) =>
+      p.status === "active" &&
+      p.dueDate &&
+      new Date(p.dueDate) >= now &&
       new Date(p.dueDate) <= new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000)
   );
 
@@ -157,18 +154,14 @@ export default function DashboardPage() {
     },
   ];
 
-  const hasProject = (projects?.length ?? 0) > 0;
-  const hasActor = (actors?.length ?? 0) > 0;
-  const hasTeamMember = (members?.length ?? 0) > 1;
-  const hasIncome = (portfolio?.financials.totalIncome ?? 0) > 0;
   const onboardingSteps = [
-    { id: 1, title: "Create your first project", isCompleted: hasProject },
-    { id: 2, title: "Add an actor (client, collaborator…)", isCompleted: hasActor },
-    { id: 3, title: "Log your first transaction", isCompleted: hasIncome },
-    { id: 4, title: "Invite a team member", isCompleted: hasTeamMember },
+    { id: 1, title: "Create your first project", isCompleted: onboarding?.hasProject ?? false },
+    { id: 2, title: "Add an actor (client, collaborator…)", isCompleted: onboarding?.hasActor ?? false },
+    { id: 3, title: "Log your first transaction", isCompleted: (portfolio?.financials.totalIncome ?? 0) > 0 },
+    { id: 4, title: "Invite a team member", isCompleted: onboarding?.hasMember ?? false },
     { id: 5, title: "Set up workspace settings", isCompleted: !!(session?.user?.name) },
   ];
-  const showOnboarding = !onboardingSteps.every((s) => s.isCompleted);
+  const showOnboarding = !loading && !onboardingSteps.every((s) => s.isCompleted);
 
   return (
     <>
@@ -273,7 +266,7 @@ export default function DashboardPage() {
                 View all →
               </Link>
             </div>
-            {!projects || loading ? (
+            {loading ? (
               <div className="p-5 space-y-3">
                 {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-10 w-full" />)}
               </div>
@@ -367,11 +360,11 @@ export default function DashboardPage() {
               <div className="px-5 py-4 border-b">
                 <h2 className="font-semibold text-foreground text-sm">Upcoming payments</h2>
               </div>
-              {!upcomingPayments || upcomingPayments.length === 0 ? (
+              {upcomingPayments.length === 0 ? (
                 <p className="px-5 py-4 text-xs text-muted-foreground">No upcoming payments</p>
               ) : (
                 <ul className="divide-y divide-border">
-                  {upcomingPayments.slice(0, 5).map((p) => (
+                  {upcomingPayments.map((p) => (
                     <li key={p.id} className="flex items-center justify-between px-5 py-3">
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-foreground truncate max-w-[140px]">{p.description}</p>

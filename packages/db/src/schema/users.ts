@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, pgEnum, index } from "drizzle-orm/pg-core";
 import { createId } from "@paralleldrive/cuid2";
 import { workspaces } from "./workspace.ts";
 
@@ -11,7 +11,9 @@ export const workspaceMembers = pgTable("workspace_members", {
   userId: text("user_id").notNull(), // references Better Auth's user.id
   role: workspaceRoleEnum("role").notNull().default("member"),
   joinedAt: timestamp("joined_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [
+  index("workspace_members_workspace_id_idx").on(t.workspaceId),
+]);
 
 export const invitations = pgTable("invitations", {
   id: text("id").primaryKey().$defaultFn(() => createId()),

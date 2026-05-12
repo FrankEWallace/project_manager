@@ -1,10 +1,188 @@
 import { Hono } from "hono";
-import { db, projects, transactions, milestones, phases } from "@repo/db";
-import { eq, sql, count, and, inArray, gte, lt, gt, desc } from "drizzle-orm";
+import { db, projects, transactions, milestones, actors, workspaceMembers } from "@repo/db";
+import { eq, sql, count, and, gte, lt, gt, desc } from "drizzle-orm";
 import { requireAuth } from "../middleware/auth.js";
 
 export const analyticsRouter = new Hono()
   .use(requireAuth)
+
+  // Single dashboard endpoint — replaces 7 individual calls
+  .get("/dashboard", async (c) => {
+    const { workspaceId } = c.get("auth");
+
+    const now = new Date();
+    const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
+    const pct = (cur: number, prv: number) =>
+      prv === 0 ? null : Math.round(((cur - prv) / prv) * 100);
+
+    const monthFinancials = (start: Date, end: Date) =>
+      db
+        .select({
+          income: sql<string>`coalesce(sum(case when ${transactions.type} = 'income' then ${transactions.normalizedAmount} else 0 end), 0)`,
+          expenses: sql<string>`coalesce(sum(case when ${transactions.type} = 'expense' then ${transactions.normalizedAmount} else 0 end), 0)`,
+        })
+        .from(transactions)
+        .innerJoin(projects, eq(transactions.projectId, projects.id))
+        .where(
+          and(
+            eq(projects.workspaceId, workspaceId),
+            gte(transactions.date, start),
+            lt(transactions.date, end)
+          )
+        );
+
+    const [
+      statusCounts,
+      allTimeFinancials,
+      projectList,
+      curMonthFinancials,
+      prvMonthFinancials,
+      activeNow,
+      activeLast,
+      milestoneStats,
+      upcomingPayments,
+      actorCount,
+      memberCount,
+    ] = await Promise.all([
+      db
+        .select({ status: projects.status, count: count() })
+        .from(projects)
+        .where(and(eq(projects.workspaceId, workspaceId), eq(projects.archived, false)))
+        .groupBy(projects.status),
+
+      db
+        .select({
+          totalIncome: sql<string>`coalesce(sum(case when ${transactions.type} = 'income' then ${transactions.normalizedAmount} else 0 end), 0)`,
+          totalExpenses: sql<string>`coalesce(sum(case when ${transactions.type} = 'expense' then ${transactions.normalizedAmount} else 0 end), 0)`,
+        })
+        .from(transactions)
+        .innerJoin(projects, eq(transactions.projectId, projects.id))
+        .where(eq(projects.workspaceId, workspaceId)),
+
+      db
+        .select({
+          id: projects.id,
+          name: projects.name,
+          status: projects.status,
+          health: projects.health,
+          priority: projects.priority,
+          budget: projects.budget,
+          dueDate: projects.dueDate,
+          createdAt: projects.createdAt,
+        })
+        .from(projects)
+        .where(and(eq(projects.workspaceId, workspaceId), eq(projects.archived, false)))
+        .orderBy(desc(projects.createdAt)),
+
+      monthFinancials(thisMonthStart, nextMonthStart),
+      monthFinancials(lastMonthStart, thisMonthStart),
+
+      db
+        .select({ count: count() })
+        .from(projects)
+        .where(and(eq(projects.workspaceId, workspaceId), eq(projects.status, "active"), eq(projects.archived, false))),
+
+      db
+        .select({ count: count() })
+        .from(projects)
+        .where(
+          and(
+            eq(projects.workspaceId, workspaceId),
+            eq(projects.status, "active"),
+            eq(projects.archived, false),
+            lt(projects.createdAt, thisMonthStart)
+          )
+        ),
+
+      db
+        .select({
+          total: count(),
+          completed: sql<number>`count(*) filter (where ${milestones.status} = 'completed')`,
+        })
+        .from(milestones)
+        .innerJoin(projects, eq(milestones.projectId, projects.id))
+        .where(and(eq(projects.workspaceId, workspaceId), eq(projects.archived, false))),
+
+      db
+        .select({
+          id: transactions.id,
+          description: transactions.description,
+          type: transactions.type,
+          amount: transactions.normalizedAmount,
+          currency: transactions.workspaceCurrency,
+          date: transactions.date,
+          projectId: transactions.projectId,
+          projectName: projects.name,
+          category: transactions.category,
+        })
+        .from(transactions)
+        .innerJoin(projects, eq(transactions.projectId, projects.id))
+        .where(and(eq(projects.workspaceId, workspaceId), gt(transactions.date, now)))
+        .orderBy(transactions.date)
+        .limit(5),
+
+      db.select({ count: count() }).from(actors).where(eq(actors.workspaceId, workspaceId)),
+      db.select({ count: count() }).from(workspaceMembers).where(eq(workspaceMembers.workspaceId, workspaceId)),
+    ]);
+
+    const totalIncome = Number(allTimeFinancials[0]?.totalIncome ?? 0);
+    const totalExpenses = Number(allTimeFinancials[0]?.totalExpenses ?? 0);
+
+    const curIncome = Number(curMonthFinancials[0]?.income ?? 0);
+    const prvIncome = Number(prvMonthFinancials[0]?.income ?? 0);
+    const curExpenses = Number(curMonthFinancials[0]?.expenses ?? 0);
+    const prvExpenses = Number(prvMonthFinancials[0]?.expenses ?? 0);
+
+    const curActive = activeNow[0]?.count ?? 0;
+    const prvActive = activeLast[0]?.count ?? 0;
+
+    const milestoneTotal = milestoneStats[0]?.total ?? 0;
+    const milestoneCompleted = milestoneStats[0]?.completed ?? 0;
+
+    const overdue = projectList.filter(
+      (p) => p.status === "active" && p.dueDate && p.dueDate < now
+    ).length;
+
+    return c.json({
+      data: {
+        portfolio: {
+          statusBreakdown: statusCounts,
+          overdue,
+          totalProjects: projectList.length,
+          financials: {
+            totalIncome,
+            totalExpenses,
+            profit: totalIncome - totalExpenses,
+          },
+        },
+        trends: {
+          income: { current: curIncome, previous: prvIncome, pct: pct(curIncome, prvIncome) },
+          expenses: { current: curExpenses, previous: prvExpenses, pct: pct(curExpenses, prvExpenses) },
+          profit: {
+            current: curIncome - curExpenses,
+            previous: prvIncome - prvExpenses,
+            pct: pct(curIncome - curExpenses, prvIncome - prvExpenses),
+          },
+          activeProjects: { current: curActive, previous: prvActive, pct: pct(curActive, prvActive) },
+        },
+        projects: projectList,
+        milestones: {
+          total: milestoneTotal,
+          completed: milestoneCompleted,
+          completionRate: milestoneTotal === 0 ? 0 : Math.round((milestoneCompleted / milestoneTotal) * 100),
+        },
+        upcomingPayments,
+        onboarding: {
+          hasProject: projectList.length > 0,
+          hasActor: (actorCount[0]?.count ?? 0) > 0,
+          hasMember: (memberCount[0]?.count ?? 0) > 1,
+        },
+      },
+    });
+  })
 
   // Portfolio overview
   .get("/portfolio", async (c) => {
@@ -77,26 +255,17 @@ export const analyticsRouter = new Hono()
   .get("/milestones-summary", async (c) => {
     const { workspaceId } = c.get("auth");
 
-    const projectIds = await db
-      .select({ id: projects.id })
-      .from(projects)
+    const [row] = await db
+      .select({
+        total: count(),
+        completed: sql<number>`count(*) filter (where ${milestones.status} = 'completed')`,
+      })
+      .from(milestones)
+      .innerJoin(projects, eq(milestones.projectId, projects.id))
       .where(and(eq(projects.workspaceId, workspaceId), eq(projects.archived, false)));
 
-    if (projectIds.length === 0) {
-      return c.json({ data: { total: 0, completed: 0, completionRate: 0 } });
-    }
-
-    const ids = projectIds.map((p) => p.id);
-
-    const [total, completed] = await Promise.all([
-      db.select({ count: count() }).from(milestones).where(inArray(milestones.projectId, ids)),
-      db.select({ count: count() }).from(milestones).where(
-        and(inArray(milestones.projectId, ids), eq(milestones.status, "completed"))
-      ),
-    ]);
-
-    const totalCount = total[0]?.count ?? 0;
-    const completedCount = completed[0]?.count ?? 0;
+    const totalCount = row?.total ?? 0;
+    const completedCount = row?.completed ?? 0;
 
     return c.json({
       data: {
