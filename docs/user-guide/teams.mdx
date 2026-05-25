@@ -1,0 +1,67 @@
+---
+title: Teams
+description: Invite members to your workspace and manage roles and permissions.
+---
+
+## Workspace roles
+
+| Role | Permissions |
+|---|---|
+| **Owner** | Full access. Can delete the workspace. Only one per workspace. |
+| **Admin** | Create, edit, archive, and delete any resource. Manage members. |
+| **Member** | Create and view. Cannot archive, delete, or manage members. |
+
+---
+
+## Inviting a team member
+
+1. Go to **Settings → Team** (or **Settings → Members**).
+2. Click **Invite member**.
+3. Enter their email address and select a role (Admin or Member).
+4. Click **Send invitation**.
+
+The invitee receives an email with a link. When they click it, they are prompted to create an account (if they don't have one) and then added to your workspace.
+
+---
+
+## Invitation lifecycle
+
+| State | Meaning |
+|---|---|
+| `Pending` | Email sent, not yet accepted |
+| `Accepted` | Member has joined the workspace |
+| `Expired` | Invitation link is older than 7 days (resend from the same page) |
+
+---
+
+## Changing a member's role
+
+1. Go to **Settings → Team**.
+2. Find the member and click the role dropdown.
+3. Select the new role — the change takes effect immediately.
+
+<Note>
+You cannot change the **Owner** role. To transfer ownership, contact support.
+</Note>
+
+---
+
+## Removing a member
+
+1. Go to **Settings → Team**.
+2. Click the ⋯ menu next to the member.
+3. Select **Remove from workspace**.
+
+Removing a member does not delete any content they created — projects, transactions, and actors they added remain in your workspace.
+
+---
+
+## Solo mode vs. team mode
+
+Project Manager starts in **solo mode** — one user, full access. Team mode activates automatically when the first invitation is accepted. In team mode:
+
+- Role-based access is enforced on all API routes
+- The **Members** section appears in Settings
+- The audit log records who made each change
+
+There is no manual toggle — the switch is seamless.

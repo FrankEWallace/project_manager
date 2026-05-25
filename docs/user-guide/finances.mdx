@@ -1,0 +1,83 @@
+---
+title: Finances
+description: Log income and expenses per project, track budgets, and generate invoices.
+---
+
+## Overview
+
+The **Finances** module tracks every penny in and out of your projects. Transactions are linked directly to a project so your P&L is always project-scoped — and rolled up into the portfolio dashboard.
+
+---
+
+## Transactions
+
+A **transaction** is any financial event: a client payment, a contractor invoice, a software subscription, etc.
+
+### Logging a transaction
+
+1. Open a project and go to the **Finances** tab, or navigate to **Finances** in the sidebar.
+2. Click **Add transaction**.
+3. Fill in:
+   - **Type** — `Income` or `Expense`
+   - **Amount** — number in your workspace currency
+   - **Description** — what this transaction is for
+   - **Date** — when it occurred or is due
+   - **Category** — optional; used in the analytics breakdown (e.g. "Design", "Hosting")
+   - **Status** — `Pending` or `Paid`
+
+Click **Save** — the project's P&L and the portfolio dashboard update immediately.
+
+---
+
+## Budget tracking
+
+You can set a **budget** on any project (edit the project and fill in the Budget field). This is a display-only number — it does not block spending.
+
+Once set, the project dashboard shows:
+- **Budget** — the target
+- **Expenses** — total logged expenses
+- **Budget used** — expenses as a percentage of budget
+
+<Warning>
+Budget is compared against **expenses only** — not total spend vs. income.
+</Warning>
+
+---
+
+## Project P&L
+
+Every project has a live profit & loss summary:
+
+| Metric | Calculation |
+|---|---|
+| **Total income** | Sum of all `Income` transactions |
+| **Total expenses** | Sum of all `Expense` transactions |
+| **Net profit** | Income − Expenses |
+| **Budget used %** | Expenses ÷ Budget × 100 |
+
+This is visible on the project detail page and in the Analytics dashboard.
+
+---
+
+## Invoices
+
+Project Manager can generate invoices directly from your project transactions.
+
+### Setting up invoice defaults
+
+Go to **Settings → Invoices** and configure:
+- Business name and address
+- Default currency
+- Payment terms (e.g. Net 30)
+- Logo upload (optional)
+
+### Creating an invoice
+
+1. Go to the **Invoices** tab on a project (or the top-level **Finances → Invoices** view).
+2. Click **New invoice**.
+3. Select the transactions to include, or add line items manually.
+4. Review the preview and click **Generate**.
+
+<Tip>
+Invoice settings are workspace-wide — set them once and every invoice uses your branding automatically.
+</Tip>

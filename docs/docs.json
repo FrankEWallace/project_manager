@@ -11,6 +11,28 @@
   "navigation": {
     "tabs": [
       {
+        "tab": "User Guide",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "user-guide/overview"
+            ]
+          },
+          {
+            "group": "Modules",
+            "pages": [
+              "user-guide/projects",
+              "user-guide/finances",
+              "user-guide/analytics",
+              "user-guide/actors",
+              "user-guide/timeline",
+              "user-guide/teams"
+            ]
+          }
+        ]
+      },
+      {
         "tab": "Documentation",
         "groups": [
           {

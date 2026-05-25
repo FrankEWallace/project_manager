@@ -1,0 +1,79 @@
+---
+title: Analytics
+description: Understand your portfolio performance with real-time KPIs and trend data.
+---
+
+## Overview
+
+The **Analytics** module gives you two views:
+1. **Portfolio dashboard** — rolled-up KPIs across all your projects
+2. **Per-project analytics** — detailed financials and progress for a single project
+
+Both update in real time as you log transactions and complete milestones.
+
+---
+
+## Portfolio dashboard
+
+The dashboard is the first thing you see after logging in. It shows:
+
+### KPI row
+
+| Metric | Description |
+|---|---|
+| **Total revenue** | Sum of all income transactions in your workspace |
+| **Total expenses** | Sum of all expense transactions |
+| **Net profit** | Revenue minus expenses |
+| **Active projects** | Count of projects with `Active` status |
+
+Each KPI shows a **trend arrow** comparing the current month to the previous month:
+- ↑ Green — improvement
+- ↓ Red — regression
+- — Grey — no prior data or no change
+
+### Status summary
+
+A quick-glance row showing counts for: Active, Completed, On Hold, Overdue. The Overdue count turns red when > 0.
+
+### Milestone completion rate
+
+Shows what percentage of all milestones across your workspace have been completed.
+
+### Recent projects table
+
+The 6 most recently created projects with status, health, priority, and due date. Click any row to open the project.
+
+### Due in 14 days
+
+Projects with a due date within the next two weeks. Overdue projects appear at the top in red.
+
+### Upcoming payments
+
+Transactions with a future date flagged as pending — so you know what cash is coming in and going out.
+
+---
+
+## Per-project analytics
+
+Open any project and go to the **Analytics** tab to see:
+
+- Income vs. expenses over time (monthly bar chart)
+- Category breakdown for expenses
+- Budget vs. actual bar
+- Milestone completion timeline
+
+---
+
+## Reading trends
+
+Trend percentages are calculated as:
+
+```
+pct = ((current_month - previous_month) / previous_month) * 100
+```
+
+If there is no previous month data, the trend shows "No prior data" instead of a percentage.
+
+<Note>
+Trends compare **calendar months** — current month-to-date vs. the full previous month. Early in the month, numbers will look lower than last month until the month fills out.
+</Note>

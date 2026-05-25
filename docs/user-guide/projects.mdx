@@ -1,0 +1,103 @@
+---
+title: Projects
+description: Create and manage projects with phases, milestones, and automatic progress tracking.
+---
+
+## Project hierarchy
+
+Every piece of work in Project Manager lives in a hierarchy:
+
+```
+Project → Phase → Milestone → Task
+```
+
+Progress is **fully computed** — as milestones complete, phase progress updates. As phases complete, project progress updates. You never enter a percentage manually.
+
+<Note>Tasks exist in the data model but are hidden in v1. The full task surface ships in v2.</Note>
+
+---
+
+## Creating a project
+
+1. Click **New project** from the dashboard or the Projects list.
+2. Fill in the required fields:
+   - **Name** — what you call the project (required)
+   - **Status** — start with `Draft` or `Active`
+   - **Due date** — optional but recommended; drives the "overdue" indicator
+3. Optional fields:
+   - **Category** — colour-coded tag you define in workspace settings
+   - **Budget** — display-only; compared against your logged expenses
+   - **Tags** — free-text labels for filtering
+   - **Priority** — Low / Medium / High / Critical
+   - **Visibility** — Private (only you) or Workspace (all members)
+
+Click **Create project** — you're taken straight to the project detail view.
+
+---
+
+## Project statuses
+
+| Status | When to use |
+|---|---|
+| `Draft` | Not yet started; planning in progress |
+| `Active` | Work is underway |
+| `On Hold` | Paused temporarily |
+| `Completed` | Delivered |
+| `Cancelled` | Abandoned |
+
+A project shows as **Overdue** in the dashboard when its status is `Active` and the due date has passed. This is computed — not a status you set.
+
+---
+
+## Project health
+
+Health is a separate signal from status — it describes *how* the project is going:
+
+| Health | Meaning |
+|---|---|
+| `Healthy` | On track |
+| `At Risk` | May slip |
+| `Delayed` | Behind schedule |
+| `Blocked` | Cannot progress |
+
+Health is always set manually from the project edit form.
+
+---
+
+## Phases
+
+A **Phase** is a stage of the project (e.g. "Discovery", "Build", "Launch").
+
+**To add a phase:**
+1. Open a project and go to the **Phases** tab.
+2. Click **Add phase**.
+3. Give it a name and an optional start/end date.
+
+Phases have their own progress bar — it reflects the completion rate of milestones inside them.
+
+---
+
+## Milestones
+
+A **Milestone** is a concrete deliverable inside a phase (e.g. "Design approved", "API live").
+
+**To add a milestone:**
+1. Expand a phase and click **Add milestone**.
+2. Give it a name and optional due date.
+3. Mark it complete by toggling the checkbox.
+
+When all milestones in a phase are marked complete, the phase is considered done, and the project progress updates automatically.
+
+---
+
+## Archiving a project
+
+Archived projects are hidden from all lists by default (toggle with **Show archived**). Only **admin** and **owner** roles can archive.
+
+To archive: open the project, open the ⋯ menu, and select **Archive project**.
+
+---
+
+## Actors on a project
+
+You can link any actor (client, collaborator, vendor) to a project. See [Actors](/user-guide/actors) for details.
