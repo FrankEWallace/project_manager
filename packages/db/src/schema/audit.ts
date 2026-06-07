@@ -5,7 +5,7 @@ import { workspaces } from "./workspace.ts";
 export const auditEntityEnum = pgEnum("audit_entity", [
   "workspace", "project", "phase", "milestone", "task",
   "transaction", "actor", "user", "invitation",
-  "invoice", "invoice_settings",
+  "invoice", "invoice_settings", "category",
 ]);
 
 export const auditActionEnum = pgEnum("audit_action", [

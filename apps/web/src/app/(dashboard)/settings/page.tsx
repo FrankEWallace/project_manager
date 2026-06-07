@@ -9,7 +9,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Building2, Check, UserPlus, X, Mail, Users } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Building2, Check, UserPlus, X, Mail, Users, Tags, Plus, Pencil, Trash2, Archive, ArchiveRestore } from "lucide-react";
 import { apiRequest } from "@/lib/api";
 import { useSession } from "@/lib/auth-client";
 import { getWorkspaceId } from "@/lib/workspace";
@@ -42,6 +44,17 @@ interface Workspace {
   logoUrl: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+interface Category {
+  id: string;
+  name: string;
+  color: string;
+  icon: string | null;
+  description: string | null;
+  archived: boolean;
+  projectCount: number;
+  createdAt: string;
 }
 
 // ─── Currency options ─────────────────────────────────────────────────────────
@@ -323,6 +336,358 @@ function WorkspaceSettingsCard({ workspace, onSaved }: { workspace: Workspace; o
   );
 }
 
+// ─── Categories ───────────────────────────────────────────────────────────────
+
+const CATEGORY_COLORS = [
+  "#6366f1", "#8b5cf6", "#ec4899", "#ef4444", "#f97316",
+  "#eab308", "#22c55e", "#14b8a6", "#0ea5e9", "#64748b",
+];
+
+interface CategoryFormState {
+  name: string;
+  color: string;
+  icon: string;
+  description: string;
+}
+
+function CategoryDialog({
+  open,
+  onClose,
+  onSuccess,
+  category,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
+  category?: Category | null;
+}) {
+  const isEdit = !!category;
+  const [form, setForm] = React.useState<CategoryFormState>({
+    name: "", color: CATEGORY_COLORS[0]!, icon: "", description: "",
+  });
+
+  React.useEffect(() => {
+    if (category) {
+      setForm({
+        name: category.name,
+        color: category.color,
+        icon: category.icon ?? "",
+        description: category.description ?? "",
+      });
+    } else {
+      setForm({ name: "", color: CATEGORY_COLORS[0]!, icon: "", description: "" });
+    }
+  }, [category, open]);
+
+  const { mutate: create, loading: creating } = useMutation<object, Category>("/api/categories");
+  const { mutate: update, loading: updating } = useMutation<object, Category>(
+    `/api/categories/${category?.id}`,
+    "PATCH"
+  );
+  const loading = creating || updating;
+
+  function set(field: keyof CategoryFormState, value: string) {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const payload = {
+      name: form.name,
+      color: form.color,
+      icon: form.icon || undefined,
+      description: form.description || undefined,
+    };
+    const result = isEdit ? await update(payload) : await create(payload);
+    if (result) { onSuccess(); onClose(); }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{isEdit ? "Edit category" : "New category"}</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+          <div className="flex gap-3">
+            <div className="space-y-1.5">
+              <Label>Icon</Label>
+              <Input
+                value={form.icon}
+                onChange={(e) => set("icon", e.target.value)}
+                placeholder="🚀"
+                maxLength={2}
+                className="w-16 text-center text-lg"
+              />
+            </div>
+            <div className="flex-1 space-y-1.5">
+              <Label>Name</Label>
+              <Input value={form.name} onChange={(e) => set("name", e.target.value)} required placeholder="e.g. Client Work" />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Color</Label>
+            <div className="flex flex-wrap gap-2">
+              {CATEGORY_COLORS.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => set("color", c)}
+                  style={{ backgroundColor: c }}
+                  className={[
+                    "h-7 w-7 rounded-full transition-transform",
+                    form.color.toLowerCase() === c.toLowerCase()
+                      ? "ring-2 ring-offset-2 ring-offset-background ring-foreground scale-110"
+                      : "hover:scale-110",
+                  ].join(" ")}
+                  aria-label={`Color ${c}`}
+                />
+              ))}
+              <label className="relative h-7 w-7 rounded-full ring-1 ring-foreground/20 overflow-hidden cursor-pointer" title="Custom color">
+                <span
+                  className="absolute inset-0"
+                  style={{ background: "conic-gradient(from 0deg, red, yellow, lime, aqua, blue, magenta, red)" }}
+                />
+                <input
+                  type="color"
+                  value={form.color}
+                  onChange={(e) => set("color", e.target.value)}
+                  className="absolute inset-0 opacity-0 cursor-pointer"
+                />
+              </label>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Description</Label>
+            <Textarea value={form.description} onChange={(e) => set("description", e.target.value)} placeholder="Optional — what belongs in this category" rows={2} />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? "Saving…" : isEdit ? "Save changes" : "Create category"}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function DeleteCategoryDialog({
+  category,
+  onClose,
+  onSuccess,
+}: {
+  category: Category | null;
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
+  const { mutate, loading } = useMutation<object, unknown>(
+    `/api/categories/${category?.id}`,
+    "DELETE"
+  );
+
+  async function handleDelete() {
+    const result = await mutate({});
+    if (result !== null) { onSuccess(); onClose(); }
+  }
+
+  return (
+    <Dialog open={!!category} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Delete category?</DialogTitle>
+        </DialogHeader>
+        <p className="text-sm text-muted-foreground">
+          <strong className="text-foreground">{category?.name}</strong> will be deleted.
+          {category && category.projectCount > 0
+            ? ` ${category.projectCount} project${category.projectCount === 1 ? "" : "s"} will keep their data but become uncategorized.`
+            : " This cannot be undone."}
+        </p>
+        <div className="flex justify-end gap-2 pt-2">
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button variant="destructive" onClick={handleDelete} disabled={loading}>
+            {loading ? "Deleting…" : "Delete"}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function CategoriesCard() {
+  const { data: categories, loading, refetch } = useApi<Category[]>("/api/categories");
+  const [showAdd, setShowAdd] = React.useState(false);
+  const [editCategory, setEditCategory] = React.useState<Category | null>(null);
+  const [deleteCategory, setDeleteCategory] = React.useState<Category | null>(null);
+  const [archivingId, setArchivingId] = React.useState<string | null>(null);
+
+  const active = (categories ?? []).filter((c) => !c.archived);
+  const archived = (categories ?? []).filter((c) => c.archived);
+
+  return (
+    <Card>
+      <CardHeader className="flex-row items-center justify-between space-y-0">
+        <div>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Tags className="h-4 w-4" />
+            Categories
+          </CardTitle>
+          <CardDescription>Organize projects into analytical groups.</CardDescription>
+        </div>
+        <Button size="sm" onClick={() => setShowAdd(true)}>
+          <Plus className="h-4 w-4 mr-1.5" />
+          New
+        </Button>
+      </CardHeader>
+      <CardContent className="space-y-5">
+        {loading ? (
+          <div className="space-y-2">
+            {[1, 2, 3].map((i) => <div key={i} className="h-12 bg-muted animate-pulse rounded-lg" />)}
+          </div>
+        ) : (categories ?? []).length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-10 text-center">
+            <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center mb-3">
+              <Tags className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <p className="text-sm font-medium text-foreground">No categories yet</p>
+            <p className="text-xs text-muted-foreground mt-1">Create categories to group and analyze projects.</p>
+            <Button size="sm" className="mt-4" onClick={() => setShowAdd(true)}>
+              <Plus className="h-4 w-4 mr-1.5" />
+              Create your first category
+            </Button>
+          </div>
+        ) : (
+          <>
+            <CategoryList
+              items={active}
+              onEdit={setEditCategory}
+              onDelete={setDeleteCategory}
+              onArchiveChange={refetch}
+              archivingId={archivingId}
+              setArchivingId={setArchivingId}
+            />
+            {archived.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-muted-foreground pt-1">Archived</p>
+                <CategoryList
+                  items={archived}
+                  onEdit={setEditCategory}
+                  onDelete={setDeleteCategory}
+                  onArchiveChange={refetch}
+                  archivingId={archivingId}
+                  setArchivingId={setArchivingId}
+                />
+              </div>
+            )}
+          </>
+        )}
+      </CardContent>
+
+      <CategoryDialog
+        open={showAdd || !!editCategory}
+        onClose={() => { setShowAdd(false); setEditCategory(null); }}
+        onSuccess={refetch}
+        category={editCategory}
+      />
+      <DeleteCategoryDialog
+        category={deleteCategory}
+        onClose={() => setDeleteCategory(null)}
+        onSuccess={refetch}
+      />
+    </Card>
+  );
+}
+
+function CategoryList({
+  items,
+  onEdit,
+  onDelete,
+  onArchiveChange,
+  archivingId,
+  setArchivingId,
+}: {
+  items: Category[];
+  onEdit: (c: Category) => void;
+  onDelete: (c: Category) => void;
+  onArchiveChange: () => void;
+  archivingId: string | null;
+  setArchivingId: (id: string | null) => void;
+}) {
+  const { data: session } = useSession();
+  const token = session?.session?.token;
+  const workspaceId = getWorkspaceId();
+
+  async function toggleArchive(cat: Category) {
+    if (!token || !workspaceId) return;
+    setArchivingId(cat.id);
+    try {
+      await apiRequest(`/api/categories/${cat.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ archived: !cat.archived }),
+        token,
+        workspaceId,
+      });
+      onArchiveChange();
+    } finally {
+      setArchivingId(null);
+    }
+  }
+
+  return (
+    <div className="divide-y divide-border rounded-lg border">
+      {items.map((cat) => (
+        <div key={cat.id} className="flex items-center gap-3 px-3 py-2.5 group">
+          <div
+            className="w-7 h-7 rounded-md flex items-center justify-center text-sm shrink-0"
+            style={{ backgroundColor: `${cat.color}1a`, color: cat.color }}
+          >
+            {cat.icon || <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: cat.color }} />}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className={`text-sm font-medium truncate ${cat.archived ? "text-muted-foreground line-through" : "text-foreground"}`}>
+              {cat.name}
+            </p>
+            {cat.description && (
+              <p className="text-xs text-muted-foreground truncate">{cat.description}</p>
+            )}
+          </div>
+          <Badge variant="secondary" className="text-xs shrink-0">
+            {cat.projectCount} {cat.projectCount === 1 ? "project" : "projects"}
+          </Badge>
+          <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button
+              onClick={() => toggleArchive(cat)}
+              disabled={archivingId === cat.id}
+              title={cat.archived ? "Unarchive" : "Archive"}
+              className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-50"
+            >
+              {cat.archived ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />}
+            </button>
+            <button
+              onClick={() => onEdit(cat)}
+              title="Edit"
+              className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </button>
+            <button
+              onClick={() => onDelete(cat)}
+              title="Delete"
+              className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function SettingsPage() {
@@ -344,6 +709,8 @@ export default function SettingsPage() {
       ) : workspace ? (
         <div className="space-y-6">
           <WorkspaceSettingsCard workspace={workspace} onSaved={refetch} />
+
+          <CategoriesCard />
 
           <TeamCard />
 

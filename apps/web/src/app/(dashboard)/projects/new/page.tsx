@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useMutation } from "@/hooks/use-api";
+import { useApi, useMutation } from "@/hooks/use-api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,13 +12,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
+interface CategoryOption {
+  id: string;
+  name: string;
+  color: string;
+  icon: string | null;
+  archived: boolean;
+}
+
 export default function NewProjectPage() {
   const router = useRouter();
   const { mutate, loading, error } = useMutation<any, any>("/api/projects");
+  const { data: categories } = useApi<CategoryOption[]>("/api/categories?archived=false");
 
   const [form, setForm] = useState({
     name: "",
     description: "",
+    categoryId: "",
     status: "draft" as const,
     priority: "medium" as const,
     budget: "",
@@ -36,6 +46,7 @@ export default function NewProjectPage() {
     const project = await mutate({
       name: form.name,
       description: form.description || undefined,
+      categoryId: form.categoryId || undefined,
       status: form.status,
       priority: form.priority,
       budget: form.budget ? Number(form.budget) : undefined,
@@ -89,6 +100,28 @@ export default function NewProjectPage() {
                 rows={3}
               />
             </div>
+
+            {categories && categories.length > 0 && (
+              <div className="space-y-2">
+                <Label>Category</Label>
+                <Select value={form.categoryId || "none"} onValueChange={(v) => set("categoryId", v === "none" ? "" : v)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Uncategorized" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Uncategorized</SelectItem>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id}>
+                        <span className="flex items-center gap-2">
+                          <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: cat.color }} />
+                          {cat.icon ? `${cat.icon} ` : ""}{cat.name}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">

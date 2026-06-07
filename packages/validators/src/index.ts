@@ -17,6 +17,10 @@ export const createCategorySchema = z.object({
   description: z.string().optional(),
 });
 
+export const updateCategorySchema = createCategorySchema.partial().extend({
+  archived: z.boolean().optional(),
+});
+
 // ─── Project ──────────────────────────────────────────────────────────────────
 
 const projectStatuses = ["draft", "active", "on_hold", "completed", "cancelled"] as const;
@@ -194,6 +198,7 @@ export const upsertInvoiceSettingsSchema = z.object({
 
 export type CreateWorkspace = z.infer<typeof createWorkspaceSchema>;
 export type CreateCategory = z.infer<typeof createCategorySchema>;
+export type UpdateCategory = z.infer<typeof updateCategorySchema>;
 export type CreateProject = z.infer<typeof createProjectSchema>;
 export type UpdateProject = z.infer<typeof updateProjectSchema>;
 export type CreatePhase = z.infer<typeof createPhaseSchema>;

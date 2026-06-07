@@ -13,6 +13,7 @@ import { projectActorsRouter } from "./routes/projectActors.js";
 import { invitationsRouter } from "./routes/invitations.js";
 import { tasksRouter } from "./routes/tasks.js";
 import { invoicesRouter } from "./routes/invoices.js";
+import { categoriesRouter } from "./routes/categories.js";
 
 const app = new Hono();
 
@@ -41,5 +42,6 @@ app.route("/api", transactionsRouter);
 app.route("/api/invitations", invitationsRouter);
 app.route("/api/projects", tasksRouter);
 app.route("/api/invoices", invoicesRouter);
+app.route("/api/categories", categoriesRouter);
 
 export default app;
