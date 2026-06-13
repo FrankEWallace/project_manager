@@ -46,6 +46,7 @@ export const analyticsRouter = new Hono()
       upcomingPayments,
       actorCount,
       memberCount,
+      progressByProject,
     ] = await Promise.all([
       db
         .select({ status: projects.status, count: count() })
@@ -126,6 +127,17 @@ export const analyticsRouter = new Hono()
 
       db.select({ count: count() }).from(actors).where(eq(actors.workspaceId, workspaceId)),
       db.select({ count: count() }).from(workspaceMembers).where(eq(workspaceMembers.workspaceId, workspaceId)),
+
+      db
+        .select({
+          projectId: milestones.projectId,
+          total: count(),
+          completed: sql<number>`count(*) filter (where ${milestones.status} = 'completed')`,
+        })
+        .from(milestones)
+        .innerJoin(projects, eq(milestones.projectId, projects.id))
+        .where(and(eq(projects.workspaceId, workspaceId), eq(projects.archived, false)))
+        .groupBy(milestones.projectId),
     ]);
 
     const totalIncome = Number(allTimeFinancials[0]?.totalIncome ?? 0);
@@ -145,6 +157,13 @@ export const analyticsRouter = new Hono()
     const overdue = projectList.filter(
       (p) => p.status === "active" && p.dueDate && p.dueDate < now
     ).length;
+
+    const progressMap = new Map(
+      progressByProject.map((r) => [
+        r.projectId,
+        r.total === 0 ? 0 : Math.round((r.completed / r.total) * 100),
+      ])
+    );
 
     return c.json({
       data: {
@@ -168,7 +187,7 @@ export const analyticsRouter = new Hono()
           },
           activeProjects: { current: curActive, previous: prvActive, pct: pct(curActive, prvActive) },
         },
-        projects: projectList,
+        projects: projectList.map((p) => ({ ...p, progress: progressMap.get(p.id) ?? 0 })),
         milestones: {
           total: milestoneTotal,
           completed: milestoneCompleted,

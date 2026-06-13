@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { db, projects, phases, milestones, transactions } from "@repo/db";
 import { createProjectSchema, updateProjectSchema } from "@repo/validators";
-import { eq, and, sql, desc } from "drizzle-orm";
+import { eq, and, sql, count, desc } from "drizzle-orm";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { writeAuditLog } from "../lib/audit.js";
 import { computeProjectProgress } from "../lib/progress.js";
@@ -18,18 +18,38 @@ export const projectsRouter = new Hono()
     const { workspaceId } = c.get("auth");
     const { status, categoryId, archived } = c.req.query();
 
-    const rows = await db.query.projects.findMany({
-      where: and(
-        eq(projects.workspaceId, workspaceId),
-        eq(projects.archived, archived === "true"),
-        status ? eq(projects.status, status as "draft" | "active" | "on_hold" | "completed" | "cancelled") : undefined,
-        categoryId ? eq(projects.categoryId, categoryId) : undefined,
-      ),
-      with: { category: true },
-      orderBy: [desc(projects.createdAt)],
-    });
+    const [rows, progressRows] = await Promise.all([
+      db.query.projects.findMany({
+        where: and(
+          eq(projects.workspaceId, workspaceId),
+          eq(projects.archived, archived === "true"),
+          status ? eq(projects.status, status as "draft" | "active" | "on_hold" | "completed" | "cancelled") : undefined,
+          categoryId ? eq(projects.categoryId, categoryId) : undefined,
+        ),
+        with: { category: true },
+        orderBy: [desc(projects.createdAt)],
+      }),
 
-    return c.json({ data: rows });
+      db
+        .select({
+          projectId: milestones.projectId,
+          total: count(),
+          completed: sql<number>`count(*) filter (where ${milestones.status} = 'completed')`,
+        })
+        .from(milestones)
+        .innerJoin(projects, eq(milestones.projectId, projects.id))
+        .where(eq(projects.workspaceId, workspaceId))
+        .groupBy(milestones.projectId),
+    ]);
+
+    const progressMap = new Map(
+      progressRows.map((r) => [
+        r.projectId,
+        r.total === 0 ? 0 : Math.round((r.completed / r.total) * 100),
+      ])
+    );
+
+    return c.json({ data: rows.map((p) => ({ ...p, progress: progressMap.get(p.id) ?? 0 })) });
   })
 
   .post("/", zValidator("json", createProjectSchema), async (c) => {
@@ -150,7 +170,7 @@ export const projectsRouter = new Hono()
 
   .delete("/:id", requireRole("admin", "owner"), async (c) => {
     const { workspaceId, userId } = c.get("auth");
-    const { id } = c.req.param();
+    const id = c.req.param("id") as string;
 
     const existing = await db.query.projects.findFirst({
       where: and(eq(projects.id, id), eq(projects.workspaceId, workspaceId)),

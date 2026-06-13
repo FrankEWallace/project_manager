@@ -19,9 +19,10 @@ interface Project {
   tags: string[];
   dueDate: string | null;
   createdAt: string;
+  progress: number;
 }
 
-type SortKey = "name" | "status" | "health" | "priority" | "budget" | "dueDate" | "createdAt";
+type SortKey = "name" | "status" | "health" | "priority" | "budget" | "dueDate" | "progress";
 type SortDir = "asc" | "desc";
 
 const statusOrder: Record<string, number> = { active: 0, on_hold: 1, draft: 2, completed: 3, cancelled: 4 };
@@ -105,7 +106,7 @@ function DeleteProjectDialog({
 
 export default function ProjectsPage() {
   const { data: projects, loading, refetch } = useApi<Project[]>("/api/projects");
-  const [sortKey, setSortKey] = useState<SortKey>("createdAt");
+  const [sortKey, setSortKey] = useState<SortKey>("status");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [deleteProject, setDeleteProject] = useState<Project | null>(null);
@@ -136,7 +137,7 @@ export default function ProjectsPage() {
         const db = b.dueDate ? new Date(b.dueDate).getTime() : Infinity;
         cmp = da - db;
       }
-      else if (sortKey === "createdAt") cmp = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      else if (sortKey === "progress") cmp = a.progress - b.progress;
       return sortDir === "asc" ? cmp : -cmp;
     });
   }, [projects, sortKey, sortDir, statusFilter]);
@@ -156,7 +157,7 @@ export default function ProjectsPage() {
     { key: "priority", label: "Priority", className: "hidden lg:table-cell" },
     { key: "budget", label: "Budget", className: "hidden lg:table-cell text-right" },
     { key: "dueDate", label: "Due date", className: "hidden xl:table-cell text-right" },
-    { key: "createdAt", label: "Created", className: "hidden xl:table-cell text-right" },
+    { key: "progress", label: "Progress", className: "hidden xl:table-cell" },
   ];
 
   return (
@@ -316,9 +317,17 @@ export default function ProjectsPage() {
                       )}
                     </td>
 
-                    {/* Created */}
-                    <td className="px-4 py-3.5 hidden xl:table-cell text-right">
-                      <span className="text-xs text-muted-foreground">{formatDate(project.createdAt)}</span>
+                    {/* Progress */}
+                    <td className="px-4 py-3.5 hidden xl:table-cell">
+                      <div className="flex items-center gap-2 min-w-[100px]">
+                        <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-primary rounded-full transition-all"
+                            style={{ width: `${project.progress}%` }}
+                          />
+                        </div>
+                        <span className="text-xs text-muted-foreground tabular-nums w-7 text-right">{project.progress}%</span>
+                      </div>
                     </td>
 
                     {/* Actions */}
