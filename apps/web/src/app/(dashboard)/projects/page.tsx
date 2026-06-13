@@ -8,10 +8,18 @@ import { Plus, FolderKanban, ArrowUpDown, ArrowUp, ArrowDown, Trash2 } from "luc
 import Link from "next/link";
 import { useState, useMemo } from "react";
 
+interface Category {
+  id: string;
+  name: string;
+  color: string;
+  icon: string | null;
+}
+
 interface Project {
   id: string;
   name: string;
   description: string | null;
+  categoryId: string | null;
   status: string;
   health: string;
   priority: string;
@@ -19,9 +27,10 @@ interface Project {
   tags: string[];
   dueDate: string | null;
   createdAt: string;
+  progress: number;
 }
 
-type SortKey = "name" | "status" | "health" | "priority" | "budget" | "dueDate" | "createdAt";
+type SortKey = "name" | "status" | "health" | "priority" | "budget" | "dueDate" | "progress";
 type SortDir = "asc" | "desc";
 
 const statusOrder: Record<string, number> = { active: 0, on_hold: 1, draft: 2, completed: 3, cancelled: 4 };
@@ -105,9 +114,11 @@ function DeleteProjectDialog({
 
 export default function ProjectsPage() {
   const { data: projects, loading, refetch } = useApi<Project[]>("/api/projects");
-  const [sortKey, setSortKey] = useState<SortKey>("createdAt");
+  const { data: categories } = useApi<Category[]>("/api/categories?archived=false");
+  const [sortKey, setSortKey] = useState<SortKey>("status");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [deleteProject, setDeleteProject] = useState<Project | null>(null);
 
   const now = new Date();
@@ -123,7 +134,11 @@ export default function ProjectsPage() {
 
   const sorted = useMemo(() => {
     if (!projects) return [];
-    let list = statusFilter === "all" ? projects : projects.filter((p) => p.status === statusFilter);
+    let list = projects;
+    if (statusFilter !== "all") list = list.filter((p) => p.status === statusFilter);
+    if (categoryFilter !== "all") list = list.filter((p) =>
+      categoryFilter === "none" ? !p.categoryId : p.categoryId === categoryFilter
+    );
     return [...list].sort((a, b) => {
       let cmp = 0;
       if (sortKey === "name") cmp = a.name.localeCompare(b.name);
@@ -136,7 +151,7 @@ export default function ProjectsPage() {
         const db = b.dueDate ? new Date(b.dueDate).getTime() : Infinity;
         cmp = da - db;
       }
-      else if (sortKey === "createdAt") cmp = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      else if (sortKey === "progress") cmp = a.progress - b.progress;
       return sortDir === "asc" ? cmp : -cmp;
     });
   }, [projects, sortKey, sortDir, statusFilter]);
@@ -156,7 +171,7 @@ export default function ProjectsPage() {
     { key: "priority", label: "Priority", className: "hidden lg:table-cell" },
     { key: "budget", label: "Budget", className: "hidden lg:table-cell text-right" },
     { key: "dueDate", label: "Due date", className: "hidden xl:table-cell text-right" },
-    { key: "createdAt", label: "Created", className: "hidden xl:table-cell text-right" },
+    { key: "progress", label: "Progress", className: "hidden xl:table-cell" },
   ];
 
   return (
@@ -177,7 +192,7 @@ export default function ProjectsPage() {
         </Button>
       </div>
 
-      {/* Filter tabs */}
+      {/* Status filter tabs */}
       <div className="flex items-center gap-1 flex-wrap">
         {[
           { value: "all", label: "All", count: projects?.length ?? 0 },
@@ -203,6 +218,35 @@ export default function ProjectsPage() {
           </button>
         ))}
       </div>
+
+      {/* Category filter pills — only shown when categories exist */}
+      {categories && categories.length > 0 && (
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-xs text-muted-foreground mr-1">Category:</span>
+          {[{ id: "all", name: "All", color: "", icon: null }, ...categories].map((cat) => {
+            const active = categoryFilter === cat.id;
+            return (
+              <button
+                key={cat.id}
+                onClick={() => setCategoryFilter(cat.id)}
+                className={[
+                  "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors border",
+                  active
+                    ? "border-transparent text-white"
+                    : "border-border text-muted-foreground hover:text-foreground hover:bg-muted",
+                ].join(" ")}
+                style={active && cat.color ? { backgroundColor: cat.color, borderColor: cat.color } : undefined}
+              >
+                {cat.icon && <span>{cat.icon}</span>}
+                {cat.id !== "all" && !cat.icon && cat.color && (
+                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: active ? "white" : cat.color }} />
+                )}
+                {cat.name}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Table */}
       {loading ? (
@@ -316,9 +360,17 @@ export default function ProjectsPage() {
                       )}
                     </td>
 
-                    {/* Created */}
-                    <td className="px-4 py-3.5 hidden xl:table-cell text-right">
-                      <span className="text-xs text-muted-foreground">{formatDate(project.createdAt)}</span>
+                    {/* Progress */}
+                    <td className="px-4 py-3.5 hidden xl:table-cell">
+                      <div className="flex items-center gap-2 min-w-[100px]">
+                        <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-primary rounded-full transition-all"
+                            style={{ width: `${project.progress}%` }}
+                          />
+                        </div>
+                        <span className="text-xs text-muted-foreground tabular-nums w-7 text-right">{project.progress}%</span>
+                      </div>
                     </td>
 
                     {/* Actions */}

@@ -204,8 +204,8 @@ export default function NewProjectPage() {
             </div>
 
             <div className="flex gap-3 pt-2">
-              <Button type="submit" loading={loading}>
-                Create project
+              <Button type="submit" disabled={loading}>
+                {loading ? "Creating…" : "Create project"}
               </Button>
               <Button type="button" variant="outline" asChild>
                 <Link href="/projects">Cancel</Link>

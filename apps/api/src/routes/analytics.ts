@@ -1,6 +1,6 @@
 import { Hono } from "hono";
-import { db, projects, transactions, milestones, actors, workspaceMembers } from "@repo/db";
-import { eq, sql, count, and, gte, lt, gt, desc } from "drizzle-orm";
+import { db, projects, transactions, milestones, actors, workspaceMembers, categories } from "@repo/db";
+import { eq, sql, count, and, gte, lt, gt, desc, asc } from "drizzle-orm";
 import { requireAuth } from "../middleware/auth.js";
 
 export const analyticsRouter = new Hono()
@@ -46,6 +46,7 @@ export const analyticsRouter = new Hono()
       upcomingPayments,
       actorCount,
       memberCount,
+      progressByProject,
     ] = await Promise.all([
       db
         .select({ status: projects.status, count: count() })
@@ -75,7 +76,23 @@ export const analyticsRouter = new Hono()
         })
         .from(projects)
         .where(and(eq(projects.workspaceId, workspaceId), eq(projects.archived, false)))
-        .orderBy(desc(projects.createdAt)),
+        .orderBy(
+          // Active first, then on_hold, draft, completed, cancelled
+          sql`case ${projects.status}
+            when 'active' then 0
+            when 'on_hold' then 1
+            when 'draft' then 2
+            when 'completed' then 3
+            else 4 end`,
+          // Within active: most urgent health first
+          sql`case ${projects.health}
+            when 'blocked' then 0
+            when 'delayed' then 1
+            when 'at_risk' then 2
+            else 3 end`,
+          // Then earliest due date
+          asc(projects.dueDate),
+        ),
 
       monthFinancials(thisMonthStart, nextMonthStart),
       monthFinancials(lastMonthStart, thisMonthStart),
@@ -126,6 +143,17 @@ export const analyticsRouter = new Hono()
 
       db.select({ count: count() }).from(actors).where(eq(actors.workspaceId, workspaceId)),
       db.select({ count: count() }).from(workspaceMembers).where(eq(workspaceMembers.workspaceId, workspaceId)),
+
+      db
+        .select({
+          projectId: milestones.projectId,
+          total: count(),
+          completed: sql<number>`count(*) filter (where ${milestones.status} = 'completed')`,
+        })
+        .from(milestones)
+        .innerJoin(projects, eq(milestones.projectId, projects.id))
+        .where(and(eq(projects.workspaceId, workspaceId), eq(projects.archived, false)))
+        .groupBy(milestones.projectId),
     ]);
 
     const totalIncome = Number(allTimeFinancials[0]?.totalIncome ?? 0);
@@ -145,6 +173,13 @@ export const analyticsRouter = new Hono()
     const overdue = projectList.filter(
       (p) => p.status === "active" && p.dueDate && p.dueDate < now
     ).length;
+
+    const progressMap = new Map(
+      progressByProject.map((r) => [
+        r.projectId,
+        r.total === 0 ? 0 : Math.round((r.completed / r.total) * 100),
+      ])
+    );
 
     return c.json({
       data: {
@@ -168,7 +203,7 @@ export const analyticsRouter = new Hono()
           },
           activeProjects: { current: curActive, previous: prvActive, pct: pct(curActive, prvActive) },
         },
-        projects: projectList,
+        projects: projectList.map((p) => ({ ...p, progress: progressMap.get(p.id) ?? 0 })),
         milestones: {
           total: milestoneTotal,
           completed: milestoneCompleted,
@@ -239,14 +274,18 @@ export const analyticsRouter = new Hono()
     const rows = await db
       .select({
         categoryId: projects.categoryId,
+        categoryName: categories.name,
+        categoryColor: categories.color,
+        categoryIcon: categories.icon,
         count: count(),
         totalIncome: sql<string>`coalesce(sum(case when ${transactions.type} = 'income' then ${transactions.normalizedAmount} else 0 end), 0)`,
         totalExpenses: sql<string>`coalesce(sum(case when ${transactions.type} = 'expense' then ${transactions.normalizedAmount} else 0 end), 0)`,
       })
       .from(projects)
       .leftJoin(transactions, eq(transactions.projectId, projects.id))
+      .leftJoin(categories, eq(projects.categoryId, categories.id))
       .where(and(eq(projects.workspaceId, workspaceId), eq(projects.archived, false)))
-      .groupBy(projects.categoryId);
+      .groupBy(projects.categoryId, categories.name, categories.color, categories.icon);
 
     return c.json({ data: rows });
   })

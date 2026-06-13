@@ -32,7 +32,7 @@ export const auth = betterAuth({
       create: {
         after: async (user) => {
           const name = `${user.name}'s Workspace`;
-          const slug = slugify(name);
+          const slug = `${slugify(name)}-${Math.random().toString(36).slice(2, 8)}`;
 
           const [workspace] = await (db.insert(workspaces).values({ name, slug } as any).returning());
 

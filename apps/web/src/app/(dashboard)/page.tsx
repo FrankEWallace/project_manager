@@ -31,6 +31,7 @@ interface Dashboard {
     budget: string | null;
     dueDate: string | null;
     createdAt: string;
+    progress: number;
   }[];
   milestones: { total: number; completed: number; completionRate: number };
   upcomingPayments: {
@@ -281,7 +282,7 @@ export default function DashboardPage() {
                   <tr className="border-b bg-muted/40">
                     <th className="text-left px-5 py-2.5 text-xs font-medium text-muted-foreground">Project</th>
                     <th className="text-left px-3 py-2.5 text-xs font-medium text-muted-foreground hidden sm:table-cell">Status</th>
-                    <th className="text-left px-3 py-2.5 text-xs font-medium text-muted-foreground hidden md:table-cell">Priority</th>
+                    <th className="text-left px-3 py-2.5 text-xs font-medium text-muted-foreground hidden md:table-cell w-36">Progress</th>
                     <th className="text-right px-5 py-2.5 text-xs font-medium text-muted-foreground hidden lg:table-cell">Due</th>
                   </tr>
                 </thead>
@@ -303,10 +304,16 @@ export default function DashboardPage() {
                             {p.status.replace("_", " ")}
                           </span>
                         </td>
-                        <td className="px-3 py-3 hidden md:table-cell">
-                          <span className={`text-xs font-medium capitalize ${priorityLabel[p.priority]}`}>
-                            {p.priority}
-                          </span>
+                        <td className="px-3 py-3 hidden md:table-cell w-36">
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-primary rounded-full transition-all"
+                                style={{ width: `${p.progress}%` }}
+                              />
+                            </div>
+                            <span className="text-xs text-muted-foreground tabular-nums w-7 text-right">{p.progress}%</span>
+                          </div>
                         </td>
                         <td className="px-5 py-3 text-right hidden lg:table-cell">
                           {p.dueDate ? (
