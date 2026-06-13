@@ -8,10 +8,18 @@ import { Plus, FolderKanban, ArrowUpDown, ArrowUp, ArrowDown, Trash2 } from "luc
 import Link from "next/link";
 import { useState, useMemo } from "react";
 
+interface Category {
+  id: string;
+  name: string;
+  color: string;
+  icon: string | null;
+}
+
 interface Project {
   id: string;
   name: string;
   description: string | null;
+  categoryId: string | null;
   status: string;
   health: string;
   priority: string;
@@ -106,9 +114,11 @@ function DeleteProjectDialog({
 
 export default function ProjectsPage() {
   const { data: projects, loading, refetch } = useApi<Project[]>("/api/projects");
+  const { data: categories } = useApi<Category[]>("/api/categories?archived=false");
   const [sortKey, setSortKey] = useState<SortKey>("status");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [deleteProject, setDeleteProject] = useState<Project | null>(null);
 
   const now = new Date();
@@ -124,7 +134,11 @@ export default function ProjectsPage() {
 
   const sorted = useMemo(() => {
     if (!projects) return [];
-    let list = statusFilter === "all" ? projects : projects.filter((p) => p.status === statusFilter);
+    let list = projects;
+    if (statusFilter !== "all") list = list.filter((p) => p.status === statusFilter);
+    if (categoryFilter !== "all") list = list.filter((p) =>
+      categoryFilter === "none" ? !p.categoryId : p.categoryId === categoryFilter
+    );
     return [...list].sort((a, b) => {
       let cmp = 0;
       if (sortKey === "name") cmp = a.name.localeCompare(b.name);
@@ -178,7 +192,7 @@ export default function ProjectsPage() {
         </Button>
       </div>
 
-      {/* Filter tabs */}
+      {/* Status filter tabs */}
       <div className="flex items-center gap-1 flex-wrap">
         {[
           { value: "all", label: "All", count: projects?.length ?? 0 },
@@ -204,6 +218,35 @@ export default function ProjectsPage() {
           </button>
         ))}
       </div>
+
+      {/* Category filter pills — only shown when categories exist */}
+      {categories && categories.length > 0 && (
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-xs text-muted-foreground mr-1">Category:</span>
+          {[{ id: "all", name: "All", color: "", icon: null }, ...categories].map((cat) => {
+            const active = categoryFilter === cat.id;
+            return (
+              <button
+                key={cat.id}
+                onClick={() => setCategoryFilter(cat.id)}
+                className={[
+                  "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors border",
+                  active
+                    ? "border-transparent text-white"
+                    : "border-border text-muted-foreground hover:text-foreground hover:bg-muted",
+                ].join(" ")}
+                style={active && cat.color ? { backgroundColor: cat.color, borderColor: cat.color } : undefined}
+              >
+                {cat.icon && <span>{cat.icon}</span>}
+                {cat.id !== "all" && !cat.icon && cat.color && (
+                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: active ? "white" : cat.color }} />
+                )}
+                {cat.name}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Table */}
       {loading ? (

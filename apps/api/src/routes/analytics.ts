@@ -1,6 +1,6 @@
 import { Hono } from "hono";
-import { db, projects, transactions, milestones, actors, workspaceMembers } from "@repo/db";
-import { eq, sql, count, and, gte, lt, gt, desc } from "drizzle-orm";
+import { db, projects, transactions, milestones, actors, workspaceMembers, categories } from "@repo/db";
+import { eq, sql, count, and, gte, lt, gt, desc, asc } from "drizzle-orm";
 import { requireAuth } from "../middleware/auth.js";
 
 export const analyticsRouter = new Hono()
@@ -76,7 +76,23 @@ export const analyticsRouter = new Hono()
         })
         .from(projects)
         .where(and(eq(projects.workspaceId, workspaceId), eq(projects.archived, false)))
-        .orderBy(desc(projects.createdAt)),
+        .orderBy(
+          // Active first, then on_hold, draft, completed, cancelled
+          sql`case ${projects.status}
+            when 'active' then 0
+            when 'on_hold' then 1
+            when 'draft' then 2
+            when 'completed' then 3
+            else 4 end`,
+          // Within active: most urgent health first
+          sql`case ${projects.health}
+            when 'blocked' then 0
+            when 'delayed' then 1
+            when 'at_risk' then 2
+            else 3 end`,
+          // Then earliest due date
+          asc(projects.dueDate),
+        ),
 
       monthFinancials(thisMonthStart, nextMonthStart),
       monthFinancials(lastMonthStart, thisMonthStart),
@@ -258,14 +274,18 @@ export const analyticsRouter = new Hono()
     const rows = await db
       .select({
         categoryId: projects.categoryId,
+        categoryName: categories.name,
+        categoryColor: categories.color,
+        categoryIcon: categories.icon,
         count: count(),
         totalIncome: sql<string>`coalesce(sum(case when ${transactions.type} = 'income' then ${transactions.normalizedAmount} else 0 end), 0)`,
         totalExpenses: sql<string>`coalesce(sum(case when ${transactions.type} = 'expense' then ${transactions.normalizedAmount} else 0 end), 0)`,
       })
       .from(projects)
       .leftJoin(transactions, eq(transactions.projectId, projects.id))
+      .leftJoin(categories, eq(projects.categoryId, categories.id))
       .where(and(eq(projects.workspaceId, workspaceId), eq(projects.archived, false)))
-      .groupBy(projects.categoryId);
+      .groupBy(projects.categoryId, categories.name, categories.color, categories.icon);
 
     return c.json({ data: rows });
   })

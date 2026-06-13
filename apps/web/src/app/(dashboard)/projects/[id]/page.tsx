@@ -31,6 +31,7 @@ interface ProjectDetail {
   id: string;
   name: string;
   description: string | null;
+  categoryId: string | null;
   status: string;
   health: string;
   priority: string;
@@ -149,9 +150,12 @@ function EditProjectDialog({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const { data: categories } = useApi<{ id: string; name: string; color: string; icon: string | null }[]>("/api/categories?archived=false");
+
   const [form, setForm] = useState({
     name: project.name,
     description: project.description ?? "",
+    categoryId: project.categoryId ?? "",
     status: project.status,
     health: project.health,
     priority: project.priority,
@@ -172,6 +176,7 @@ function EditProjectDialog({
     const result = await mutate({
       name: form.name,
       description: form.description || undefined,
+      categoryId: form.categoryId || undefined,
       status: form.status,
       health: form.health,
       priority: form.priority,
@@ -198,6 +203,25 @@ function EditProjectDialog({
             <Label>Description</Label>
             <Textarea value={form.description} onChange={(e) => set("description", e.target.value)} rows={2} placeholder="Optional" />
           </div>
+          {categories && categories.length > 0 && (
+            <div className="space-y-1.5">
+              <Label>Category</Label>
+              <Select value={form.categoryId || "none"} onValueChange={(v) => set("categoryId", v === "none" ? "" : v)}>
+                <SelectTrigger><SelectValue placeholder="Uncategorized" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Uncategorized</SelectItem>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      <span className="flex items-center gap-2">
+                        <span className="h-2.5 w-2.5 rounded-full inline-block" style={{ backgroundColor: cat.color }} />
+                        {cat.icon ? `${cat.icon} ` : ""}{cat.name}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label>Status</Label>
