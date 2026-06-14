@@ -216,9 +216,9 @@ function ByCategorySection({ data, loading, totalProjects }: {
     <Card>
       <CardHeader><CardTitle className="text-sm font-medium">By category</CardTitle></CardHeader>
       <CardContent>
-        <div className="divide-y divide-border">
+        <div className="space-y-2">
           {data.map((item, i) => (
-            <div key={item.categoryId ?? `u-${i}`} className="py-3 flex items-center justify-between gap-4">
+            <div key={item.categoryId ?? `u-${i}`} className="py-2 flex items-center justify-between gap-4">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-primary/60 shrink-0" />
                 <span className="text-sm font-medium text-foreground">

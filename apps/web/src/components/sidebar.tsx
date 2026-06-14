@@ -18,7 +18,6 @@ import {
 import { cn } from "@/lib/utils";
 import { signOut, useSession } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
-import { Separator } from "@/components/ui/separator";
 import { useState, useEffect } from "react";
 
 const nav = [
@@ -64,12 +63,12 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "flex flex-col border-r bg-card h-screen sticky top-0 transition-all duration-200 overflow-hidden",
+        "flex flex-col bg-muted/30 h-screen sticky top-0 transition-all duration-200 overflow-hidden border-r border-border/40",
         collapsed ? "w-14" : "w-60"
       )}
     >
       {/* Header */}
-      <div className="px-3 py-5 flex items-center gap-3 min-w-0">
+      <div className="px-3 pt-5 pb-4 flex items-center gap-3 min-w-0">
         <Image
           src="/logo.jpg"
           alt="Logo"
@@ -87,10 +86,8 @@ export function Sidebar() {
         )}
       </div>
 
-      <Separator />
-
       {/* Nav */}
-      <nav className="flex-1 px-2 py-4 space-y-1">
+      <nav className="flex-1 px-2 py-2 space-y-0.5">
         {nav.map(({ label, href, icon: Icon }) => {
           const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
           return (
@@ -99,11 +96,11 @@ export function Sidebar() {
               href={href}
               title={collapsed ? label : undefined}
               className={cn(
-                "flex items-center gap-3 px-2 py-2 rounded-md text-sm font-medium transition-colors",
+                "flex items-center gap-3 px-2 py-2 rounded-lg text-sm font-medium transition-colors",
                 collapsed ? "justify-center" : "",
                 active
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:bg-background/60 hover:text-foreground"
               )}
             >
               <Icon className="h-4 w-4 shrink-0" />
@@ -113,15 +110,13 @@ export function Sidebar() {
         })}
       </nav>
 
-      <Separator />
-
       {/* Bottom actions */}
-      <div className="px-2 py-4 space-y-1">
+      <div className="px-2 pb-2 space-y-0.5">
         <Link
           href="/settings"
           title={collapsed ? "Settings" : undefined}
           className={cn(
-            "flex items-center gap-3 px-2 py-2 rounded-md text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors",
+            "flex items-center gap-3 px-2 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:bg-background/60 hover:text-foreground transition-colors",
             collapsed ? "justify-center" : ""
           )}
         >
@@ -132,7 +127,7 @@ export function Sidebar() {
           onClick={handleSignOut}
           title={collapsed ? "Sign out" : undefined}
           className={cn(
-            "w-full flex items-center gap-3 px-2 py-2 rounded-md text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors",
+            "w-full flex items-center gap-3 px-2 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:bg-background/60 hover:text-foreground transition-colors",
             collapsed ? "justify-center" : ""
           )}
         >
@@ -141,16 +136,14 @@ export function Sidebar() {
         </button>
       </div>
 
-      <Separator />
-
       {/* User + collapse toggle */}
       <div
         className={cn(
-          "px-3 py-4 flex items-center gap-3 min-w-0",
+          "mx-2 mb-3 px-2 py-3 rounded-xl bg-background/60 flex items-center gap-3 min-w-0",
           collapsed ? "flex-col" : ""
         )}
       >
-        <div className="w-8 h-8 rounded-full bg-primary/10 text-primary ring-2 ring-border flex items-center justify-center text-xs font-semibold shrink-0">
+        <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-semibold shrink-0">
           {initials}
         </div>
         {!collapsed && (

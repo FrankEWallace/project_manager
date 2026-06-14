@@ -1,3 +1,8 @@
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useSession } from "@/lib/auth-client";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -53,6 +58,15 @@ const features = [
 const hierarchy = ["Project", "Phase", "Milestone", "Task"];
 
 export default function LandingPage() {
+  const router = useRouter();
+  const { data: session, isPending } = useSession();
+
+  useEffect(() => {
+    if (!isPending && session?.user) {
+      router.replace("/projects");
+    }
+  }, [session, isPending, router]);
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
       {/* subtle grid overlay */}

@@ -91,19 +91,12 @@ function KpiGrid() {
   ];
 
   return (
-    <div className="overflow-hidden rounded-xl bg-card ring-1 ring-foreground/10">
-      <div className="grid grid-cols-2 xl:grid-cols-4">
-        {kpis.map((kpi, i) => {
-          const isLastRow = i >= 2;
-          const isRight = i % 2 === 1;
+    <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
+      {kpis.map((kpi) => {
           return (
             <div
               key={kpi.label}
-              className={[
-                "p-5 flex flex-col gap-3",
-                !isLastRow ? "border-b border-foreground/10" : "",
-                !isRight ? "border-r border-foreground/10" : "",
-              ].join(" ")}
+              className="bg-muted/40 rounded-2xl p-5 flex flex-col gap-3"
             >
               <p className="text-sm text-muted-foreground">{kpi.label}</p>
               {loading ? (
@@ -124,7 +117,6 @@ function KpiGrid() {
             </div>
           );
         })}
-      </div>
     </div>
   );
 }
@@ -187,9 +179,9 @@ function UpcomingPaymentsCard() {
             {[1, 2, 3].map((i) => <Skeleton key={i} className="h-12 w-full" />)}
           </div>
         ) : data && data.length > 0 ? (
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {data.map((item) => (
-              <div key={item.id} className="flex items-center gap-3 rounded-lg border border-border p-3">
+              <div key={item.id} className="flex items-center gap-3 rounded-xl bg-muted/30 p-3">
                 <div className={`shrink-0 rounded-full p-1.5 ${item.type === "income" ? "bg-green-500/10" : "bg-red-500/10"}`}>
                   {item.type === "income"
                     ? <ArrowUpRight className="h-3.5 w-3.5 text-green-600" />
@@ -382,7 +374,7 @@ function TransactionsTable() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-border text-xs text-muted-foreground">
+                  <tr className="bg-muted/30 text-xs text-muted-foreground">
                     <th className="text-left px-4 py-3 font-medium">Date</th>
                     <th className="text-left px-4 py-3 font-medium">Description</th>
                     <th className="text-left px-4 py-3 font-medium">Project</th>
@@ -390,9 +382,9 @@ function TransactionsTable() {
                     <th className="text-right px-4 py-3 font-medium">Amount</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
+                <tbody>
                   {data.map((tx) => (
-                    <tr key={tx.id} className="hover:bg-muted/30 transition-colors">
+                    <tr key={tx.id} className="hover:bg-muted/40 transition-colors border-t border-border/30 first:border-t-0">
                       <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
                         {format(new Date(tx.date), "MMM d, yyyy")}
                       </td>
@@ -467,7 +459,7 @@ export default function FinancesPage() {
         </TabsContent>
 
         <TabsContent value="accounts">
-          <div className="flex h-48 items-center justify-center rounded-xl border border-border border-dashed text-muted-foreground text-sm">
+          <div className="flex h-48 items-center justify-center rounded-2xl bg-muted/20 text-muted-foreground text-sm">
             Accounts view coming in v2.
           </div>
         </TabsContent>

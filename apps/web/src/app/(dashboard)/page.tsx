@@ -188,9 +188,9 @@ export default function DashboardPage() {
         )}
 
         {/* KPI row */}
-        <div className="grid grid-cols-2 xl:grid-cols-4 gap-px bg-border rounded-xl overflow-hidden ring-1 ring-border">
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
           {kpis.map((kpi) => (
-            <div key={kpi.label} className="bg-card p-5 flex flex-col gap-3">
+            <div key={kpi.label} className="bg-muted/40 rounded-2xl p-5 flex flex-col gap-3">
               <div className="flex items-center justify-between">
                 <p className="text-sm text-muted-foreground">{kpi.label}</p>
                 {kpi.icon}
@@ -224,7 +224,7 @@ export default function DashboardPage() {
             { label: "On hold", value: onHold, dot: "bg-yellow-500" },
             { label: "Overdue", value: portfolio?.overdue ?? 0, dot: "bg-red-500", warn: true },
           ].map(({ label, value, dot, warn }) => (
-            <div key={label} className="bg-card border rounded-xl p-4 flex items-center gap-3">
+            <div key={label} className="bg-muted/40 rounded-2xl p-4 flex items-center gap-3">
               <div className={`w-2 h-2 rounded-full shrink-0 ${dot}`} />
               <div>
                 <p className={`text-xl font-bold ${warn && value > 0 ? "text-destructive" : "text-foreground"}`}>
@@ -234,7 +234,7 @@ export default function DashboardPage() {
               </div>
             </div>
           ))}
-          <div className="bg-card border rounded-xl p-4 flex items-center gap-3">
+          <div className="bg-muted/40 rounded-2xl p-4 flex items-center gap-3">
             <CheckSquare className="h-4 w-4 text-muted-foreground shrink-0" />
             <div>
               <p className="text-xl font-bold text-foreground">
@@ -260,8 +260,8 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
           {/* Recent projects table */}
-          <div className="xl:col-span-2 bg-card border rounded-xl overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 border-b">
+          <div className="xl:col-span-2 bg-card rounded-2xl overflow-hidden shadow-sm ring-1 ring-border/50">
+            <div className="flex items-center justify-between px-5 pt-5 pb-4">
               <h2 className="font-semibold text-foreground text-sm">Recent projects</h2>
               <Link href="/projects" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
                 View all →
@@ -279,18 +279,18 @@ export default function DashboardPage() {
             ) : (
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b bg-muted/40">
+                  <tr className="bg-muted/30">
                     <th className="text-left px-5 py-2.5 text-xs font-medium text-muted-foreground">Project</th>
                     <th className="text-left px-3 py-2.5 text-xs font-medium text-muted-foreground hidden sm:table-cell">Status</th>
                     <th className="text-left px-3 py-2.5 text-xs font-medium text-muted-foreground hidden md:table-cell w-36">Progress</th>
                     <th className="text-right px-5 py-2.5 text-xs font-medium text-muted-foreground hidden lg:table-cell">Due</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
+                <tbody>
                   {recentProjects.map((p) => {
                     const isOverdue = p.status === "active" && p.dueDate && new Date(p.dueDate) < now;
                     return (
-                      <tr key={p.id} className="hover:bg-muted/30 transition-colors group">
+                      <tr key={p.id} className="hover:bg-muted/40 transition-colors group border-t border-border/30 first:border-t-0">
                         <td className="px-5 py-3">
                           <Link href={`/projects/${p.id}`} className="flex items-center gap-2.5">
                             <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${healthDot[p.health] ?? "bg-muted"}`} />
@@ -336,20 +336,20 @@ export default function DashboardPage() {
           <div className="space-y-4">
 
             {/* Due soon */}
-            <div className="bg-card border rounded-xl overflow-hidden">
-              <div className="flex items-center gap-2 px-5 py-4 border-b">
+            <div className="bg-card rounded-2xl overflow-hidden shadow-sm ring-1 ring-border/50">
+              <div className="flex items-center gap-2 px-5 pt-5 pb-4">
                 <Clock className="h-4 w-4 text-muted-foreground" />
                 <h2 className="font-semibold text-foreground text-sm">Due in 14 days</h2>
               </div>
               {dueSoonProjects.length === 0 && overdueProjects.length === 0 ? (
                 <p className="px-5 py-4 text-xs text-muted-foreground">Nothing coming up</p>
               ) : (
-                <ul className="divide-y divide-border">
+                <ul className="space-y-0.5 px-2 pb-2">
                   {[...overdueProjects, ...dueSoonProjects].slice(0, 5).map((p) => {
                     const overdue = p.dueDate && new Date(p.dueDate) < now;
                     return (
                       <li key={p.id}>
-                        <Link href={`/projects/${p.id}`} className="flex items-center justify-between px-5 py-3 hover:bg-muted/30 transition-colors">
+                        <Link href={`/projects/${p.id}`} className="flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-muted/50 transition-colors">
                           <span className="text-sm font-medium text-foreground truncate max-w-[140px]">{p.name}</span>
                           <span className={`text-xs shrink-0 ${overdue ? "text-destructive font-medium" : "text-muted-foreground"}`}>
                             {p.dueDate ? formatDate(p.dueDate) : "—"}
@@ -363,16 +363,16 @@ export default function DashboardPage() {
             </div>
 
             {/* Upcoming payments */}
-            <div className="bg-card border rounded-xl overflow-hidden">
-              <div className="px-5 py-4 border-b">
+            <div className="bg-card rounded-2xl overflow-hidden shadow-sm ring-1 ring-border/50">
+              <div className="px-5 pt-5 pb-4">
                 <h2 className="font-semibold text-foreground text-sm">Upcoming payments</h2>
               </div>
               {upcomingPayments.length === 0 ? (
                 <p className="px-5 py-4 text-xs text-muted-foreground">No upcoming payments</p>
               ) : (
-                <ul className="divide-y divide-border">
+                <ul className="space-y-0.5 px-2 pb-2">
                   {upcomingPayments.map((p) => (
-                    <li key={p.id} className="flex items-center justify-between px-5 py-3">
+                    <li key={p.id} className="flex items-center justify-between px-3 py-2.5 rounded-xl">
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-foreground truncate max-w-[140px]">{p.description}</p>
                         <p className="text-xs text-muted-foreground">{formatDate(p.date)}</p>

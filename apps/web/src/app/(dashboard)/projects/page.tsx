@@ -250,13 +250,13 @@ export default function ProjectsPage() {
 
       {/* Table */}
       {loading ? (
-        <div className="border rounded-xl overflow-hidden bg-card">
+        <div className="rounded-2xl overflow-hidden bg-card shadow-sm ring-1 ring-border/50">
           <div className="p-5 space-y-3">
             {[1, 2, 3, 4, 5].map((i) => <div key={i} className="h-12 bg-muted animate-pulse rounded-lg" />)}
           </div>
         </div>
       ) : sorted.length === 0 ? (
-        <div className="border rounded-xl bg-card text-center py-20 text-muted-foreground">
+        <div className="rounded-2xl bg-card text-center py-20 text-muted-foreground shadow-sm ring-1 ring-border/50">
           <FolderKanban className="h-10 w-10 mx-auto mb-3 opacity-30" />
           <p className="font-medium">{statusFilter === "all" ? "No projects yet" : `No ${statusFilter.replace("_", " ")} projects`}</p>
           {statusFilter === "all" && (
@@ -269,10 +269,10 @@ export default function ProjectsPage() {
           )}
         </div>
       ) : (
-        <div className="border rounded-xl overflow-hidden bg-card">
+        <div className="rounded-2xl overflow-hidden bg-card shadow-sm ring-1 ring-border/50">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b bg-muted/40">
+              <tr className="bg-muted/30">
                 {cols.map((col) => (
                   <th
                     key={col.key}
@@ -293,11 +293,11 @@ export default function ProjectsPage() {
                 <th className="px-4 py-3 w-10" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
+            <tbody>
               {sorted.map((project) => {
                 const isOverdue = project.status === "active" && project.dueDate && new Date(project.dueDate) < now;
                 return (
-                  <tr key={project.id} className="hover:bg-muted/30 transition-colors group">
+                  <tr key={project.id} className="hover:bg-muted/40 transition-colors group border-t border-border/30 first:border-t-0">
                     {/* Name */}
                     <td className="px-4 py-3.5">
                       <Link href={`/projects/${project.id}`} className="flex items-start gap-2.5 min-w-0">
@@ -389,7 +389,7 @@ export default function ProjectsPage() {
           </table>
 
           {/* Table footer */}
-          <div className="border-t px-4 py-3 bg-muted/20 flex items-center justify-between">
+          <div className="px-4 py-3 bg-muted/20 flex items-center justify-between">
             <p className="text-xs text-muted-foreground">
               Showing {sorted.length} of {projects?.length ?? 0} projects
             </p>
