@@ -7,7 +7,6 @@ import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 import { CalendarDays, GanttChartSquare, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -118,7 +117,7 @@ function RoadmapView({ projects }: { projects: Project[] }) {
         </Button>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border">
+      <div className="overflow-x-auto rounded-2xl ring-1 ring-border/50 bg-card shadow-sm">
         <div style={{ minWidth: 900 }}>
           {/* Month header */}
           <div className="flex border-b">
@@ -281,7 +280,7 @@ function CalendarView({ projects }: { projects: Project[] }) {
   return (
     <div className="flex gap-6 flex-col lg:flex-row">
       {/* Calendar */}
-      <div className="rounded-xl border bg-card p-4 w-full lg:w-auto shrink-0">
+      <div className="rounded-2xl bg-card shadow-sm ring-1 ring-border/50 p-4 w-full lg:w-auto shrink-0">
         <Calendar
           mode="single"
           selected={selected}
@@ -303,7 +302,6 @@ function CalendarView({ projects }: { projects: Project[] }) {
           </p>
           <Badge variant="secondary">{selectedProjects.length} project{selectedProjects.length !== 1 ? "s" : ""}</Badge>
         </div>
-        <Separator />
         {selectedProjects.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <CalendarDays className="h-8 w-8 text-muted-foreground/30 mb-3" />
@@ -314,7 +312,7 @@ function CalendarView({ projects }: { projects: Project[] }) {
           <div className="space-y-2">
             {selectedProjects.map((p) => (
               <Link key={p.id} href={`/projects/${p.id}`}>
-                <div className="flex items-center gap-3 rounded-lg border p-3 hover:bg-muted/50 transition-colors cursor-pointer">
+                <div className="flex items-center gap-3 rounded-xl bg-muted/30 p-3 hover:bg-muted/50 transition-colors cursor-pointer">
                   <div className={cn("w-1 self-stretch rounded-full shrink-0", healthBar[p.health] ?? "bg-muted")} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{p.name}</p>
@@ -385,8 +383,6 @@ export default function TimelinePage() {
           </button>
         </div>
       </div>
-
-      <Separator />
 
       {loading ? (
         <div className="space-y-3">

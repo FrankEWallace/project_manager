@@ -295,23 +295,20 @@ export default function ActorsPage() {
 
       {/* Type summary strip */}
       {!loading && actors && actors.length > 0 && (
-        <div className="overflow-hidden rounded-xl bg-card ring-1 ring-foreground/10">
-          <div className="grid grid-cols-5">
-            {ACTOR_TYPES.map((t, i) => (
+        <div className="grid grid-cols-5 gap-3">
+            {ACTOR_TYPES.map((t) => (
               <button
                 key={t.value}
                 onClick={() => setTypeFilter(typeFilter === t.value ? "all" : t.value)}
                 className={[
-                  "p-4 text-left transition-colors hover:bg-muted/50",
-                  i < 4 ? "border-r border-foreground/10" : "",
-                  typeFilter === t.value ? "bg-muted/50" : "",
+                  "p-4 text-left transition-colors rounded-2xl",
+                  typeFilter === t.value ? "bg-primary/10 ring-1 ring-primary/20" : "bg-muted/40 hover:bg-muted/60",
                 ].join(" ")}
               >
                 <p className="text-2xl font-bold text-foreground">{countByType[t.value] ?? 0}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">{t.label}s</p>
               </button>
             ))}
-          </div>
         </div>
       )}
 
@@ -341,7 +338,7 @@ export default function ActorsPage() {
 
       {/* Table */}
       {loading ? (
-        <div className="border rounded-xl overflow-hidden bg-card">
+        <div className="rounded-2xl overflow-hidden bg-card shadow-sm ring-1 ring-border/50">
           <div className="p-5 space-y-3">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div key={i} className="h-12 bg-muted animate-pulse rounded-lg" />
@@ -349,7 +346,7 @@ export default function ActorsPage() {
           </div>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="border rounded-xl bg-card flex flex-col items-center justify-center py-20 text-center">
+        <div className="rounded-2xl bg-card shadow-sm ring-1 ring-border/50 flex flex-col items-center justify-center py-20 text-center">
           <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-4">
             <User className="h-6 w-6 text-muted-foreground" />
           </div>
@@ -369,10 +366,10 @@ export default function ActorsPage() {
           )}
         </div>
       ) : (
-        <div className="border rounded-xl overflow-hidden bg-card">
+        <div className="rounded-2xl overflow-hidden bg-card shadow-sm ring-1 ring-border/50">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b bg-muted/40">
+              <tr className="bg-muted/30">
                 {(["name", "type", "company"] as SortKey[]).map((key) => (
                   <th
                     key={key}
@@ -392,9 +389,9 @@ export default function ActorsPage() {
                 <th className="px-4 py-3 w-20" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
+            <tbody>
               {filtered.map((actor) => (
-                <tr key={actor.id} className="hover:bg-muted/30 transition-colors group">
+                <tr key={actor.id} className="hover:bg-muted/40 transition-colors group border-t border-border/30 first:border-t-0">
                   {/* Name */}
                   <td className="px-4 py-3.5">
                     <div className="flex items-center gap-3">
@@ -474,7 +471,7 @@ export default function ActorsPage() {
             </tbody>
           </table>
 
-          <div className="border-t px-4 py-3 bg-muted/20">
+          <div className="px-4 py-3 bg-muted/20">
             <p className="text-xs text-muted-foreground">
               Showing {filtered.length} of {actors?.length ?? 0} actors
             </p>
