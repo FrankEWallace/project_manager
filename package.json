@@ -6,17 +6,20 @@
     "dev": "turbo dev",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "test:e2e": "playwright test",
     "db:push": "pnpm --filter @repo/db push",
     "db:generate": "pnpm --filter @repo/db generate",
     "db:migrate": "pnpm --filter @repo/db migrate",
     "db:studio": "pnpm --filter @repo/db studio"
   },
   "devDependencies": {
-    "turbo": "^2.5.4",
-    "typescript": "^5.8.3",
+    "@playwright/test": "^1.60.0",
     "@types/node": "^22.15.3",
+    "drizzle-orm": "^0.41.0",
     "prettier": "^3.5.3",
-    "drizzle-orm": "^0.41.0"
+    "turbo": "^2.5.4",
+    "typescript": "^5.8.3"
   },
   "engines": {
     "node": ">=20"
@@ -26,6 +29,10 @@
     "overrides": {
       "drizzle-orm": "^0.41.0"
     },
-    "onlyBuiltDependencies": ["esbuild", "sharp", "unrs-resolver"]
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "sharp",
+      "unrs-resolver"
+    ]
   }
 }
