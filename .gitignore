@@ -8,3 +8,9 @@ dist
 packages/db/.env
 *.log
 .vercel
+
+# Build & test artifacts
+*.tsbuildinfo
+playwright-report
+test-results
+playwright/.cache
