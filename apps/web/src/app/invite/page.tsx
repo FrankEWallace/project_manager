@@ -60,7 +60,7 @@ function InvitePageInner() {
       if (!res.ok) throw new Error(body.error ?? "Failed to accept invite");
       setWorkspaceId(body.data.workspaceId);
       setAccepted(true);
-      setTimeout(() => router.push("/"), 1500);
+      setTimeout(() => router.push("/dashboard"), 1500);
     } catch (e) {
       setAcceptError(e instanceof Error ? e.message : "Failed to accept invite");
     } finally {
@@ -91,7 +91,7 @@ function InvitePageInner() {
           </CardHeader>
           <CardFooter className="justify-center">
             <Button variant="outline" asChild>
-              <Link href="/">Go to dashboard</Link>
+              <Link href="/dashboard">Go to dashboard</Link>
             </Button>
           </CardFooter>
         </Card>

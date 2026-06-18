@@ -21,7 +21,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 
 const nav = [
-  { label: "Dashboard", href: "/", icon: LayoutDashboard },
+  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Projects", href: "/projects", icon: FolderKanban },
   { label: "Timeline", href: "/timeline", icon: CalendarDays },
   { label: "Finances", href: "/finances", icon: Wallet },
@@ -89,7 +89,7 @@ export function Sidebar() {
       {/* Nav */}
       <nav className="flex-1 px-2 py-2 space-y-0.5">
         {nav.map(({ label, href, icon: Icon }) => {
-          const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
+          const active = pathname === href || pathname.startsWith(href + "/");
           return (
             <Link
               key={href}
