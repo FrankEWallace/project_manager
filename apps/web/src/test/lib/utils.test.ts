@@ -1,5 +1,46 @@
 import { describe, it, expect } from "vitest";
-import { cn, formatCurrency, formatDate, formatPercent } from "@/lib/utils";
+import {
+  cn,
+  formatCurrency,
+  formatDate,
+  formatPercent,
+  getInitials,
+  avatarGradient,
+} from "@/lib/utils";
+
+describe("getInitials", () => {
+  it("returns ? for empty input", () => {
+    expect(getInitials()).toBe("?");
+    expect(getInitials("")).toBe("?");
+  });
+
+  it("takes first + last initial for full names", () => {
+    expect(getInitials("Ada Lovelace")).toBe("AL");
+    expect(getInitials("Grace Brewster Hopper")).toBe("GH");
+  });
+
+  it("takes two chars for a single name", () => {
+    expect(getInitials("Madonna")).toBe("MA");
+  });
+
+  it("derives from the local part of an email", () => {
+    expect(getInitials("ada.lovelace@example.com")).toBe("AL");
+  });
+});
+
+describe("avatarGradient", () => {
+  it("is deterministic for the same seed", () => {
+    expect(avatarGradient("Ada")).toBe(avatarGradient("Ada"));
+  });
+
+  it("returns a CSS linear-gradient", () => {
+    expect(avatarGradient("Ada")).toMatch(/^linear-gradient\(/);
+  });
+
+  it("handles empty/undefined seeds", () => {
+    expect(avatarGradient()).toMatch(/^linear-gradient\(/);
+  });
+});
 
 describe("cn", () => {
   it("merges class names", () => {
