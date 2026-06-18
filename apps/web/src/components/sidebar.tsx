@@ -16,6 +16,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { UserAvatar } from "@/components/ui/avatar";
 import { signOut, useSession } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -51,14 +52,6 @@ export function Sidebar() {
     await signOut();
     router.push("/sign-in");
   }
-
-  const initials =
-    session?.user?.name
-      ?.split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2) ?? "?";
 
   return (
     <aside
@@ -143,9 +136,12 @@ export function Sidebar() {
           collapsed ? "flex-col" : ""
         )}
       >
-        <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-semibold shrink-0">
-          {initials}
-        </div>
+        <UserAvatar
+          name={session?.user?.name}
+          email={session?.user?.email}
+          src={session?.user?.image}
+          size="md"
+        />
         {!collapsed && (
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium text-foreground truncate">
