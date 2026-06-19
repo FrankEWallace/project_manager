@@ -2,14 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard,
-  FolderKanban,
-  Users,
-  BarChart3,
-  Wallet,
-  CalendarDays,
   Settings,
   LogOut,
   ChevronLeft,
@@ -17,21 +10,12 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { UserAvatar } from "@/components/ui/avatar";
+import { NavLinks } from "@/components/nav";
 import { signOut, useSession } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 
-const nav = [
-  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Projects", href: "/projects", icon: FolderKanban },
-  { label: "Timeline", href: "/timeline", icon: CalendarDays },
-  { label: "Finances", href: "/finances", icon: Wallet },
-  { label: "Actors", href: "/actors", icon: Users },
-  { label: "Analytics", href: "/analytics", icon: BarChart3 },
-];
-
-export function Sidebar() {
-  const pathname = usePathname();
+export function Sidebar({ className }: { className?: string }) {
   const router = useRouter();
   const { data: session } = useSession();
   const [collapsed, setCollapsed] = useState(false);
@@ -57,7 +41,8 @@ export function Sidebar() {
     <aside
       className={cn(
         "flex flex-col bg-muted/30 h-screen sticky top-0 transition-all duration-200 overflow-hidden border-r border-border/40",
-        collapsed ? "w-14" : "w-60"
+        collapsed ? "w-14" : "w-60",
+        className
       )}
     >
       {/* Header */}
@@ -80,28 +65,7 @@ export function Sidebar() {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-2 py-2 space-y-0.5">
-        {nav.map(({ label, href, icon: Icon }) => {
-          const active = pathname === href || pathname.startsWith(href + "/");
-          return (
-            <Link
-              key={href}
-              href={href}
-              title={collapsed ? label : undefined}
-              className={cn(
-                "flex items-center gap-3 px-2 py-2 rounded-lg text-sm font-medium transition-colors",
-                collapsed ? "justify-center" : "",
-                active
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:bg-background/60 hover:text-foreground"
-              )}
-            >
-              <Icon className="h-4 w-4 shrink-0" />
-              {!collapsed && label}
-            </Link>
-          );
-        })}
-      </nav>
+      <NavLinks collapsed={collapsed} />
 
       {/* Bottom actions */}
       <div className="px-2 pb-2 space-y-0.5">
