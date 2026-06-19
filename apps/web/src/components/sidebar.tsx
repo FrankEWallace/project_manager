@@ -7,10 +7,13 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  Search,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { UserAvatar } from "@/components/ui/avatar";
 import { NavLinks } from "@/components/nav";
+import { Kbd } from "@/components/ui/kbd";
+import { OPEN_COMMAND_PALETTE } from "@/components/command-palette";
 import { signOut, useSession } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -62,6 +65,30 @@ export function Sidebar({ className }: { className?: string }) {
             <p className="text-xs text-muted-foreground mt-0.5">Operational platform</p>
           </div>
         )}
+      </div>
+
+      {/* Command palette trigger */}
+      <div className="px-2 pb-1">
+        <button
+          type="button"
+          onClick={() => window.dispatchEvent(new Event(OPEN_COMMAND_PALETTE))}
+          title={collapsed ? "Search (⌘K)" : undefined}
+          className={cn(
+            "flex w-full items-center gap-2 rounded-lg border border-border/60 bg-background/60 px-2 py-2 text-sm text-muted-foreground transition-colors hover:bg-background hover:text-foreground",
+            collapsed ? "justify-center" : ""
+          )}
+        >
+          <Search className="h-4 w-4 shrink-0" />
+          {!collapsed && (
+            <>
+              <span className="flex-1 text-left">Search…</span>
+              <span className="flex items-center gap-0.5">
+                <Kbd>⌘</Kbd>
+                <Kbd>K</Kbd>
+              </span>
+            </>
+          )}
+        </button>
       </div>
 
       {/* Nav */}
