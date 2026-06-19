@@ -1,6 +1,8 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
+import { db } from "@repo/db";
+import { sql } from "drizzle-orm";
 import { auth } from "./lib/auth.js";
 import { projectsRouter } from "./routes/projects.js";
 import { phasesRouter } from "./routes/phases.js";
@@ -30,6 +32,18 @@ app.use(
 app.on(["GET", "POST"], "/api/auth/*", (c) => auth.handler(c.req.raw));
 
 app.get("/health", (c) => c.json({ status: "ok" }));
+
+// Keep-warm endpoint hit by a Vercel Cron (see vercel.json). The trivial query
+// wakes Neon from scale-to-zero so the first real request after an idle period
+// doesn't pay the DB cold-start penalty.
+app.get("/api/cron/warm", async (c) => {
+  try {
+    await db.execute(sql`select 1`);
+    return c.json({ status: "warm" });
+  } catch {
+    return c.json({ status: "error" }, 500);
+  }
+});
 
 app.route("/api/projects", projectsRouter);
 app.route("/api/projects", phasesRouter);

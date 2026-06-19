@@ -1,0 +1,27 @@
+name: Keep API + Neon warm
+
+# Neon scales compute to zero after ~5 min idle and the Vercel function cold-starts,
+# so the first request after a quiet period is slow. This pings the API's warm
+# endpoint (which runs a trivial `select 1`) to keep both awake.
+#
+# On Vercel Hobby, native Cron Jobs are limited to once per day, so we use GitHub
+# Actions instead. Note: GitHub's scheduled triggers are best-effort and can be
+# delayed several minutes under load. Keeping Neon awake ~24/7 consumes compute
+# hours — narrow the schedule (e.g. active hours only) if you're near the free tier.
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  warm:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping warm endpoint
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 \
+            https://project-manager-api-inky.vercel.app/api/cron/warm)
+          echo "warm endpoint returned HTTP $code"
+          # Don't fail the workflow on a transient cold-start timeout.
+          test "$code" = "200" || echo "::warning::warm ping returned $code"
