@@ -64,7 +64,7 @@ export default function NewProjectPage() {
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-foreground">New project</h1>
+          <h1 className="text-2xl font-semibold text-foreground">New project</h1>
           <p className="text-muted-foreground text-sm">Fill in the details below</p>
         </div>
       </div>

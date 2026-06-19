@@ -313,7 +313,7 @@ function CalendarView({ projects }: { projects: Project[] }) {
           onSelect={setSelected}
           className="w-full"
           modifiers={{ hasProject: (date) => activeDates.has(date.toISOString().slice(0, 10)) }}
-          modifiersClassNames={{ hasProject: "font-bold underline decoration-primary decoration-2 underline-offset-2" }}
+          modifiersClassNames={{ hasProject: "font-semibold underline decoration-primary decoration-2 underline-offset-2" }}
           classNames={{
             day_button: "!ring-0 !ring-offset-0 focus:!ring-0 focus-visible:!ring-0",
           }}
@@ -382,7 +382,7 @@ export default function TimelinePage() {
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Timeline</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Timeline</h1>
           <p className="text-muted-foreground text-sm mt-0.5">
             {loading ? "Loading…" : `${projects?.length ?? 0} projects`}
           </p>

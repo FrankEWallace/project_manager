@@ -291,7 +291,7 @@ export default function InvoiceDetailPage() {
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div>
-              <h1 className="text-xl font-bold">{invoice.invoiceNumber}</h1>
+              <h1 className="text-xl font-semibold">{invoice.invoiceNumber}</h1>
               <p className="text-xs text-muted-foreground">Editing draft</p>
             </div>
           </div>
@@ -428,7 +428,7 @@ export default function InvoiceDetailPage() {
           </Button>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold">{invoice.invoiceNumber}</h1>
+              <h1 className="text-xl font-semibold">{invoice.invoiceNumber}</h1>
               <Badge className={STATUS_CLASSES[invoice.status]}>{STATUS_LABELS[invoice.status]}</Badge>
             </div>
             <p className="text-xs text-muted-foreground">

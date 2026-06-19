@@ -104,7 +104,7 @@ function KpiGrid() {
               ) : (
                 <div className="flex items-end justify-between gap-2">
                   <span className={[
-                    "text-2xl font-bold leading-none",
+                    "text-2xl font-semibold leading-none",
                     "colored" in kpi && kpi.colored
                       ? (kpi.profit ?? 0) >= 0 ? "text-green-600" : "text-destructive"
                       : "text-foreground",
@@ -430,7 +430,7 @@ export default function FinancesPage() {
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Finances</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Finances</h1>
         <p className="text-muted-foreground text-sm mt-0.5">{format(new Date(), "EEEE, do MMMM yyyy")}</p>
       </div>
 
