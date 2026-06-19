@@ -6,6 +6,7 @@ import { useSession } from "@/lib/auth-client";
 import { getWorkspaceId, setWorkspaceId } from "@/lib/workspace";
 import { Sidebar } from "@/components/sidebar";
 import { MobileNav } from "@/components/mobile-nav";
+import { CommandPalette } from "@/components/command-palette";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
@@ -55,6 +56,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <MobileNav />
         <main className="flex-1 overflow-auto">{children}</main>
       </div>
+      <CommandPalette />
     </div>
   );
 }

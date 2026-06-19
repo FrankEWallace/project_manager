@@ -4,10 +4,11 @@ import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import * as Dialog from "@radix-ui/react-dialog";
-import { Menu, Settings, LogOut, X } from "lucide-react";
+import { Menu, Settings, LogOut, X, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { UserAvatar } from "@/components/ui/avatar";
 import { NavLinks } from "@/components/nav";
+import { OPEN_COMMAND_PALETTE } from "@/components/command-palette";
 import { signOut, useSession } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 
@@ -104,7 +105,14 @@ export function MobileNav() {
         </span>
       </Link>
 
-      <div className="ml-auto">
+      <div className="ml-auto flex items-center gap-1">
+        <button
+          aria-label="Search"
+          onClick={() => window.dispatchEvent(new Event(OPEN_COMMAND_PALETTE))}
+          className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        >
+          <Search className="h-5 w-5" />
+        </button>
         <UserAvatar
           name={session?.user?.name}
           email={session?.user?.email}
