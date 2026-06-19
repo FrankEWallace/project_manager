@@ -33,6 +33,14 @@ const healthBar: Record<string, string> = {
   blocked: "bg-red-500",
 };
 
+// Low-opacity track so the status hue is always visible even at 0% progress.
+const healthTrack: Record<string, string> = {
+  healthy: "bg-green-500/15",
+  at_risk: "bg-yellow-500/15",
+  delayed: "bg-orange-500/15",
+  blocked: "bg-red-500/15",
+};
+
 const healthText: Record<string, string> = {
   healthy: "text-green-700 bg-green-500/10",
   at_risk: "text-yellow-700 bg-yellow-500/10",
@@ -126,16 +134,34 @@ function RoadmapView({ projects }: { projects: Project[] }) {
               {months.map((m) => {
                 const days = daysInMonth(m.getFullYear(), m.getMonth());
                 const widthPct = (days / totalDays) * 100;
+                const isCurrent =
+                  m.getMonth() === today.getMonth() && m.getFullYear() === today.getFullYear();
                 return (
                   <div
                     key={m.toISOString()}
-                    className="border-r px-2 py-2 text-xs font-medium text-muted-foreground shrink-0 text-center"
+                    className={cn(
+                      "border-r px-2 py-2 text-xs shrink-0 text-center",
+                      isCurrent
+                        ? "font-semibold text-foreground bg-primary/5"
+                        : "font-medium text-muted-foreground"
+                    )}
                     style={{ width: `${widthPct}%` }}
                   >
                     {MONTH_NAMES[m.getMonth()]} {m.getFullYear()}
                   </div>
                 );
               })}
+              {/* Today marker cap */}
+              {todayPct >= 0 && todayPct <= 100 && (
+                <div
+                  className="pointer-events-none absolute top-1.5 z-30"
+                  style={{ left: `${todayPct}%` }}
+                >
+                  <span className="absolute -translate-x-1/2 whitespace-nowrap rounded-full bg-primary px-1.5 py-px text-[10px] font-medium leading-tight text-white shadow-sm">
+                    Today
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -151,7 +177,9 @@ function RoadmapView({ projects }: { projects: Project[] }) {
               const left = pct(start);
               const right = pct(end);
               const width = Math.max(right - left, 0.5);
-              const barColor = healthBar[project.health] ?? "bg-primary";
+              const fillColor = healthBar[project.health] ?? "bg-primary";
+              const trackColor = healthTrack[project.health] ?? "bg-primary/15";
+              const progress = Math.max(0, Math.min(100, project.progress));
 
               return (
                 <div key={project.id} className="flex border-b last:border-b-0 group hover:bg-muted/30 transition-colors">
@@ -165,10 +193,10 @@ function RoadmapView({ projects }: { projects: Project[] }) {
                   </div>
                   {/* Bar area */}
                   <div className="relative flex-1 py-3 px-1">
-                    {/* Today line */}
+                    {/* Today line — the single most salient marker on the axis */}
                     {todayPct >= 0 && todayPct <= 100 && (
                       <div
-                        className="absolute top-0 bottom-0 w-px bg-primary/40 z-10"
+                        className="absolute top-0 bottom-0 w-px bg-primary z-30"
                         style={{ left: `${todayPct}%` }}
                       />
                     )}
@@ -184,21 +212,19 @@ function RoadmapView({ projects }: { projects: Project[] }) {
                         />
                       );
                     })}
-                    {/* Project bar */}
+                    {/* Project bar — status-hued track + progress fill, utilitarian radius */}
                     <div
                       className={cn(
-                        "absolute top-1/2 -translate-y-1/2 h-6 rounded-full flex items-center px-2 z-20 cursor-pointer",
-                        barColor,
-                        "opacity-90 hover:opacity-100"
+                        "absolute top-1/2 -translate-y-1/2 h-6 rounded-md z-20 cursor-pointer overflow-hidden ring-1 ring-inset ring-border/40 transition-shadow hover:ring-foreground/20",
+                        trackColor
                       )}
                       style={{ left: `${left}%`, width: `${width}%`, minWidth: 8 }}
-                      title={`${project.name} · ${project.progress}% complete`}
+                      title={`${project.name} · ${progress}% complete`}
                     >
-                      {width > 4 && (
-                        <span className="text-white text-xs font-medium truncate leading-none">
-                          {project.progress}%
-                        </span>
-                      )}
+                      <div
+                        className={cn("h-full", fillColor)}
+                        style={{ width: `${progress}%` }}
+                      />
                     </div>
                   </div>
                 </div>
@@ -233,7 +259,7 @@ function RoadmapView({ projects }: { projects: Project[] }) {
           </span>
         ))}
         <span className="flex items-center gap-1.5">
-          <span className="inline-block h-4 w-px bg-primary/40" />
+          <span className="inline-block h-4 w-px bg-primary" />
           Today
         </span>
       </div>
