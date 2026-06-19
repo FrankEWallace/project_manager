@@ -282,7 +282,7 @@ export default function ActorsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Actors</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Actors</h1>
           <p className="text-muted-foreground text-sm mt-0.5">
             {loading ? "Loading…" : `${actors?.length ?? 0} people in your workspace`}
           </p>
@@ -305,7 +305,7 @@ export default function ActorsPage() {
                   typeFilter === t.value ? "bg-primary/10 ring-1 ring-primary/20" : "bg-muted/40 hover:bg-muted/60",
                 ].join(" ")}
               >
-                <p className="text-2xl font-bold text-foreground">{countByType[t.value] ?? 0}</p>
+                <p className="text-2xl font-semibold text-foreground">{countByType[t.value] ?? 0}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">{t.label}s</p>
               </button>
             ))}

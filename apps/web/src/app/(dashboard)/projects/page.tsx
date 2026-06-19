@@ -179,7 +179,7 @@ export default function ProjectsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Projects</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Projects</h1>
           <p className="text-muted-foreground text-sm mt-0.5">
             {loading ? "Loading…" : `${projects?.length ?? 0} total`}
           </p>

@@ -187,7 +187,7 @@ export default function NewInvoicePage() {
             <Link href="/finances"><ArrowLeft className="h-4 w-4" /></Link>
           </Button>
           <div>
-            <h1 className="text-xl font-bold text-foreground">New invoice</h1>
+            <h1 className="text-xl font-semibold text-foreground">New invoice</h1>
             <p className="text-xs text-muted-foreground">Fill in the details and preview before saving</p>
           </div>
         </div>

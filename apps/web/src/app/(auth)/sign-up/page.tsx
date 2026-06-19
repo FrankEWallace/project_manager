@@ -34,7 +34,7 @@ function SignUpForm() {
   return (
     <div className="space-y-6">
       <div className="space-y-1">
-        <h1 className="text-2xl font-bold text-foreground">Create your account</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Create your account</h1>
         <p className="text-sm text-muted-foreground">Your workspace is set up automatically</p>
       </div>
 

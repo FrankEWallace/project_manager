@@ -33,7 +33,7 @@ function SignInForm() {
   return (
     <div className="space-y-6">
       <div className="space-y-1">
-        <h1 className="text-2xl font-bold text-foreground">Welcome back</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Welcome back</h1>
         <p className="text-sm text-muted-foreground">Sign in to your workspace</p>
       </div>
 

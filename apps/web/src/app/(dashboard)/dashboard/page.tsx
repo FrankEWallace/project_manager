@@ -166,7 +166,7 @@ export default function DashboardPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+            <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
             <p className="text-muted-foreground text-sm mt-0.5">Portfolio overview</p>
           </div>
           <Button asChild>
@@ -195,7 +195,7 @@ export default function DashboardPage() {
                 <>
                   <span
                     className={[
-                      "text-2xl font-bold leading-none tracking-tight",
+                      "text-2xl font-semibold leading-none tracking-tight",
                       kpi.colored
                         ? (kpi.profit ?? 0) >= 0 ? "text-green-600" : "text-destructive"
                         : "text-foreground",
@@ -221,7 +221,7 @@ export default function DashboardPage() {
             <div key={label} className="bg-muted/40 rounded-2xl p-4 flex items-center gap-3">
               <div className={`w-2 h-2 rounded-full shrink-0 ${dot}`} />
               <div>
-                <p className={`text-xl font-bold ${warn && value > 0 ? "text-destructive" : "text-foreground"}`}>
+                <p className={`text-xl font-semibold ${warn && value > 0 ? "text-destructive" : "text-foreground"}`}>
                   {loading ? "—" : value}
                 </p>
                 <p className="text-xs text-muted-foreground">{label}</p>
@@ -231,7 +231,7 @@ export default function DashboardPage() {
           <div className="bg-muted/40 rounded-2xl p-4 flex items-center gap-3">
             <CheckSquare className="h-4 w-4 text-muted-foreground shrink-0" />
             <div>
-              <p className="text-xl font-bold text-foreground">
+              <p className="text-xl font-semibold text-foreground">
                 {milestones ? `${milestones.completionRate}%` : "—"}
               </p>
               <p className="text-xs text-muted-foreground">Milestones done</p>

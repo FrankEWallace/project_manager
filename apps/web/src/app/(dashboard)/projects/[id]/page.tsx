@@ -414,19 +414,19 @@ function OverviewTab({
         <Card>
           <CardContent className="pt-4">
             <p className="text-xs text-muted-foreground flex items-center gap-1 mb-1"><TrendingUp className="h-3 w-3 text-green-500" /> Revenue</p>
-            <p className="text-xl font-bold">{formatCurrency(project.financials.totalIncome, project.currency)}</p>
+            <p className="text-xl font-semibold">{formatCurrency(project.financials.totalIncome, project.currency)}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4">
             <p className="text-xs text-muted-foreground flex items-center gap-1 mb-1"><TrendingDown className="h-3 w-3 text-red-500" /> Expenses</p>
-            <p className="text-xl font-bold">{formatCurrency(project.financials.totalExpenses, project.currency)}</p>
+            <p className="text-xl font-semibold">{formatCurrency(project.financials.totalExpenses, project.currency)}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4">
             <p className="text-xs text-muted-foreground mb-1">Net profit</p>
-            <p className={`text-xl font-bold ${project.financials.profit >= 0 ? "text-green-600" : "text-red-600"}`}>
+            <p className={`text-xl font-semibold ${project.financials.profit >= 0 ? "text-green-600" : "text-red-600"}`}>
               {formatCurrency(project.financials.profit, project.currency)}
             </p>
           </CardContent>
@@ -435,7 +435,7 @@ function OverviewTab({
           <Card>
             <CardContent className="pt-4">
               <p className="text-xs text-muted-foreground mb-1">Budget used</p>
-              <p className="text-xl font-bold">{project.financials.budgetUsed}%</p>
+              <p className="text-xl font-semibold">{project.financials.budgetUsed}%</p>
               <Progress value={project.financials.budgetUsed ?? 0} className="h-1 mt-1" />
             </CardContent>
           </Card>
@@ -443,7 +443,7 @@ function OverviewTab({
           <Card>
             <CardContent className="pt-4">
               <p className="text-xs text-muted-foreground mb-1">Progress</p>
-              <p className="text-xl font-bold">{formatPercent(project.progress)}</p>
+              <p className="text-xl font-semibold">{formatPercent(project.progress)}</p>
               <Progress value={project.progress} className="h-1 mt-1" />
             </CardContent>
           </Card>
@@ -1178,7 +1178,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
         </Link>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-2xl font-bold text-foreground">{project.name}</h1>
+            <h1 className="text-2xl font-semibold text-foreground">{project.name}</h1>
             <Badge>{project.status.replace("_", " ")}</Badge>
             <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${healthColors[project.health]}`}>
               {project.health.replace("_", " ")}

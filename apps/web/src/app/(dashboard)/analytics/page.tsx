@@ -268,7 +268,7 @@ export default function AnalyticsPage() {
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Analytics</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Analytics</h1>
         <p className="text-muted-foreground text-sm mt-0.5">Portfolio intelligence</p>
       </div>
 
@@ -283,7 +283,7 @@ export default function AnalyticsPage() {
             </CardHeader>
             <CardContent className="space-y-1">
               {loading ? <Skeleton className="h-8 w-16" /> : (
-                <p className={`text-3xl font-bold ${danger && value > 0 ? "text-destructive" : "text-foreground"}`}>
+                <p className={`text-2xl font-semibold ${danger && value > 0 ? "text-destructive" : "text-foreground"}`}>
                   {value}
                 </p>
               )}
@@ -303,7 +303,7 @@ export default function AnalyticsPage() {
           </CardHeader>
           <CardContent className="space-y-1">
             {portfolioLoading ? <Skeleton className="h-9 w-32" /> : (
-              <p className="text-2xl font-bold text-foreground">
+              <p className="text-2xl font-semibold text-foreground">
                 {formatCurrency(portfolio?.financials.totalIncome ?? 0)}
               </p>
             )}
@@ -319,7 +319,7 @@ export default function AnalyticsPage() {
           </CardHeader>
           <CardContent className="space-y-1">
             {portfolioLoading ? <Skeleton className="h-9 w-32" /> : (
-              <p className="text-2xl font-bold text-foreground">
+              <p className="text-2xl font-semibold text-foreground">
                 {formatCurrency(portfolio?.financials.totalExpenses ?? 0)}
               </p>
             )}
@@ -333,7 +333,7 @@ export default function AnalyticsPage() {
           </CardHeader>
           <CardContent className="space-y-1">
             {portfolioLoading ? <Skeleton className="h-9 w-32" /> : (
-              <p className={`text-2xl font-bold ${profit >= 0 ? "text-green-600" : "text-destructive"}`}>
+              <p className={`text-2xl font-semibold ${profit >= 0 ? "text-green-600" : "text-destructive"}`}>
                 {formatCurrency(profit)}
               </p>
             )}
@@ -359,7 +359,7 @@ export default function AnalyticsPage() {
             ) : milestones ? (
               <>
                 <div className="flex items-end gap-3">
-                  <span className="text-3xl font-bold text-foreground">{milestones.completionRate}%</span>
+                  <span className="text-2xl font-semibold text-foreground">{milestones.completionRate}%</span>
                   <span className="text-sm text-muted-foreground pb-1">
                     {milestones.completed} of {milestones.total} completed
                   </span>
