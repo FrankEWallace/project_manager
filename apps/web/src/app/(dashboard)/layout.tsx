@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
 import { getWorkspaceId, setWorkspaceId } from "@/lib/workspace";
 import { Sidebar } from "@/components/sidebar";
+import { MobileNav } from "@/components/mobile-nav";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
@@ -49,10 +50,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="flex min-h-screen bg-background">
-      <Sidebar />
-      <main className="flex-1 overflow-auto">
-        {children}
-      </main>
+      <Sidebar className="hidden md:flex" />
+      <div className="flex min-w-0 flex-1 flex-col">
+        <MobileNav />
+        <main className="flex-1 overflow-auto">{children}</main>
+      </div>
     </div>
   );
 }

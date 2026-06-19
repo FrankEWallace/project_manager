@@ -6,6 +6,8 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 import { AlertTriangle, ArrowUpRight, ArrowDownRight, Minus, TrendingUp, FolderKanban, CheckSquare, Clock } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import { OnboardingChecklist } from "@/components/ui/onboarding-checklist";
 import { useSession } from "@/lib/auth-client";
 
@@ -70,14 +72,6 @@ function TrendLabel({ pct, invert = false }: { pct: number | null; invert?: bool
     </span>
   );
 }
-
-const statusBadgeVariant: Record<string, string> = {
-  active: "bg-blue-500/10 text-blue-700 dark:text-blue-300",
-  completed: "bg-green-500/10 text-green-700 dark:text-green-300",
-  on_hold: "bg-yellow-500/10 text-yellow-700 dark:text-yellow-300",
-  draft: "bg-muted text-muted-foreground",
-  cancelled: "bg-red-500/10 text-red-700 dark:text-red-300",
-};
 
 const healthDot: Record<string, string> = {
   healthy: "bg-green-500",
@@ -272,10 +266,16 @@ export default function DashboardPage() {
                 {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-10 w-full" />)}
               </div>
             ) : recentProjects.length === 0 ? (
-              <div className="py-16 text-center text-muted-foreground text-sm">
-                <FolderKanban className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                No projects yet
-              </div>
+              <EmptyState
+                icon={FolderKanban}
+                title="No projects yet"
+                description="Create your first project to start tracking phases, milestones, and finances."
+                action={
+                  <Button asChild>
+                    <Link href="/projects/new">New project</Link>
+                  </Button>
+                }
+              />
             ) : (
               <table className="w-full text-sm">
                 <thead>
@@ -300,9 +300,7 @@ export default function DashboardPage() {
                           </Link>
                         </td>
                         <td className="px-3 py-3 hidden sm:table-cell">
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusBadgeVariant[p.status] ?? "bg-muted text-muted-foreground"}`}>
-                            {p.status.replace("_", " ")}
-                          </span>
+                          <StatusBadge status={p.status} />
                         </td>
                         <td className="px-3 py-3 hidden md:table-cell w-36">
                           <div className="flex items-center gap-2">
