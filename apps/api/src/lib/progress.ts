@@ -15,7 +15,9 @@ export async function computePhaseProgress(phaseId: string): Promise<number> {
   return Math.round(((row?.completed ?? 0) / total) * 100);
 }
 
-export async function computeProjectProgress(projectId: string): Promise<number> {
+export async function computeProjectProgress(
+  projectId: string
+): Promise<{ percentage: number; totalMilestones: number; completedMilestones: number }> {
   const [row] = await db
     .select({
       total: count(),
@@ -26,6 +28,10 @@ export async function computeProjectProgress(projectId: string): Promise<number>
     .where(eq(phases.projectId, projectId));
 
   const total = row?.total ?? 0;
-  if (total === 0) return 0;
-  return Math.round(((row?.completed ?? 0) / total) * 100);
+  const completed = row?.completed ?? 0;
+  return {
+    percentage: total === 0 ? 0 : Math.round((completed / total) * 100),
+    totalMilestones: total,
+    completedMilestones: completed,
+  };
 }

@@ -42,6 +42,7 @@ interface ProjectDetail {
   startDate: string | null;
   createdAt: string;
   progress: number;
+  milestoneStats: { total: number; completed: number };
   financials: {
     totalIncome: number;
     totalExpenses: number;
@@ -285,6 +286,53 @@ function EditProjectDialog({
   );
 }
 
+// ─── Days KPI Card ────────────────────────────────────────────────────────────
+
+function DaysCard({
+  startDate,
+  dueDate,
+  createdAt,
+  status,
+}: {
+  startDate: string | null;
+  dueDate: string | null;
+  createdAt: string;
+  status: string;
+}) {
+  const now = new Date();
+  const start = startDate ? new Date(startDate) : new Date(createdAt);
+  const elapsed = Math.floor((now.getTime() - start.getTime()) / 86_400_000);
+
+  let remainingLabel = "—";
+  let remainingClass = "text-muted-foreground";
+  let isOverdue = false;
+
+  if (dueDate && status !== "completed" && status !== "cancelled") {
+    const due = new Date(dueDate);
+    const diff = Math.floor((due.getTime() - now.getTime()) / 86_400_000);
+    if (diff < 0) {
+      remainingLabel = `${Math.abs(diff)}d overdue`;
+      remainingClass = "text-destructive";
+      isOverdue = true;
+    } else {
+      remainingLabel = `${diff}d left`;
+      remainingClass = diff <= 7 ? "text-orange-600" : "";
+    }
+  }
+
+  return (
+    <Card>
+      <CardContent className="pt-4">
+        <p className="text-xs text-muted-foreground flex items-center gap-1 mb-1">
+          <Clock className="h-3 w-3" /> Timeline
+        </p>
+        <p className={`text-xl font-semibold ${remainingClass}`}>{remainingLabel}</p>
+        <p className="text-xs text-muted-foreground mt-0.5">{elapsed}d elapsed</p>
+      </CardContent>
+    </Card>
+  );
+}
+
 // ─── Overview Tab ─────────────────────────────────────────────────────────────
 
 function OverviewTab({
@@ -410,7 +458,7 @@ function OverviewTab({
   return (
     <div className="space-y-6 pt-4">
       {/* KPI row */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         <Card>
           <CardContent className="pt-4">
             <p className="text-xs text-muted-foreground flex items-center gap-1 mb-1"><TrendingUp className="h-3 w-3 text-green-500" /> Revenue</p>
@@ -448,6 +496,27 @@ function OverviewTab({
             </CardContent>
           </Card>
         )}
+        {/* Milestone completion rate */}
+        <Card>
+          <CardContent className="pt-4">
+            <p className="text-xs text-muted-foreground flex items-center gap-1 mb-1">
+              <CheckCircle2 className="h-3 w-3" /> Milestones
+            </p>
+            {project.milestoneStats.total === 0 ? (
+              <p className="text-xl font-semibold text-muted-foreground">—</p>
+            ) : (
+              <>
+                <p className="text-xl font-semibold">
+                  {project.milestoneStats.completed}
+                  <span className="text-sm font-normal text-muted-foreground">/{project.milestoneStats.total}</span>
+                </p>
+                <Progress value={Math.round((project.milestoneStats.completed / project.milestoneStats.total) * 100)} className="h-1 mt-1" />
+              </>
+            )}
+          </CardContent>
+        </Card>
+        {/* Days remaining vs elapsed */}
+        <DaysCard startDate={project.startDate} dueDate={project.dueDate} createdAt={project.createdAt} status={project.status} />
       </div>
 
       {/* Phases */}

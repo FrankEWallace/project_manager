@@ -2994,8 +2994,12 @@ async function computeProjectProgress(projectId) {
     completed: sql`count(*) filter (where ${milestones.status} = 'completed')`
   }).from(milestones).innerJoin(phases, eq2(milestones.phaseId, phases.id)).where(eq2(phases.projectId, projectId));
   const total = row?.total ?? 0;
-  if (total === 0) return 0;
-  return Math.round((row?.completed ?? 0) / total * 100);
+  const completed = row?.completed ?? 0;
+  return {
+    percentage: total === 0 ? 0 : Math.round(completed / total * 100),
+    totalMilestones: total,
+    completedMilestones: completed
+  };
 }
 
 // src/routes/projects.ts
@@ -3067,7 +3071,7 @@ var projectsRouter = new Hono().use(requireAuth).get("/", async (c) => {
     with: { category: true }
   });
   if (!project) return c.json({ error: "Not found" }, 404);
-  const [progress, [financials]] = await Promise.all([
+  const [milestoneStats, [financials]] = await Promise.all([
     computeProjectProgress(id),
     db.select({
       totalIncome: sql2`coalesce(sum(case when type = 'income' then normalized_amount else 0 end), 0)`,
@@ -3077,7 +3081,11 @@ var projectsRouter = new Hono().use(requireAuth).get("/", async (c) => {
   return c.json({
     data: {
       ...project,
-      progress,
+      progress: milestoneStats.percentage,
+      milestoneStats: {
+        total: milestoneStats.totalMilestones,
+        completed: milestoneStats.completedMilestones
+      },
       financials: {
         totalIncome: Number(financials?.totalIncome ?? 0),
         totalExpenses: Number(financials?.totalExpenses ?? 0),
