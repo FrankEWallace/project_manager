@@ -8,14 +8,9 @@ var __export = (target, all) => {
 import { getRequestListener } from "@hono/node-server";
 
 // src/app.ts
-import { Hono as Hono12 } from "hono";
+import { Hono as Hono13 } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
-
-// src/lib/auth.ts
-import { betterAuth } from "better-auth";
-import { bearer } from "better-auth/plugins";
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
 
 // ../../packages/db/src/client.ts
 import { drizzle } from "drizzle-orm/postgres-js";
@@ -525,23 +520,23 @@ var Result = class extends Array {
 var queue_default = Queue;
 function Queue(initial = []) {
   let xs = initial.slice();
-  let index = 0;
+  let index4 = 0;
   return {
     get length() {
-      return xs.length - index;
+      return xs.length - index4;
     },
     remove: (x) => {
-      const index2 = xs.indexOf(x);
-      return index2 === -1 ? null : (xs.splice(index2, 1), x);
+      const index5 = xs.indexOf(x);
+      return index5 === -1 ? null : (xs.splice(index5, 1), x);
     },
     push: (x) => (xs.push(x), x),
     shift: () => {
-      const out = xs[index++];
-      if (index === xs.length) {
-        index = 0;
+      const out = xs[index4++];
+      if (index4 === xs.length) {
+        index4 = 0;
         xs = [];
       } else {
-        xs[index - 1] = void 0;
+        xs[index4 - 1] = void 0;
       }
       return out;
     }
@@ -1034,16 +1029,16 @@ function Connection(options, queues = {}, { onopen = noop, onend = noop, onclose
     ))(xs);
   }
   function DataRow(x) {
-    let index = 7;
+    let index4 = 7;
     let length2;
     let column;
     let value;
     const row = query.isRaw ? new Array(query.statement.columns.length) : {};
     for (let i = 0; i < query.statement.columns.length; i++) {
       column = query.statement.columns[i];
-      length2 = x.readInt32BE(index);
-      index += 4;
-      value = length2 === -1 ? null : query.isRaw === true ? x.subarray(index, index += length2) : column.parser === void 0 ? x.toString("utf8", index, index += length2) : column.parser.array === true ? column.parser(x.toString("utf8", index + 1, index += length2)) : column.parser(x.toString("utf8", index, index += length2));
+      length2 = x.readInt32BE(index4);
+      index4 += 4;
+      value = length2 === -1 ? null : query.isRaw === true ? x.subarray(index4, index4 += length2) : column.parser === void 0 ? x.toString("utf8", index4, index4 += length2) : column.parser.array === true ? column.parser(x.toString("utf8", index4 + 1, index4 += length2)) : column.parser(x.toString("utf8", index4, index4 += length2));
       query.isRaw ? row[i] = query.isRaw === true ? value : transform.value.from ? transform.value.from(value, column) : value : row[column.name] = transform.value.from ? transform.value.from(value, column) : value;
     }
     query.forEachFn ? query.forEachFn(transform.row.from ? transform.row.from(row) : row, result) : result[rows++] = transform.row.from ? transform.row.from(row) : row;
@@ -1134,23 +1129,23 @@ function Connection(options, queues = {}, { onopen = noop, onend = noop, onclose
       query.statement.columns = null;
     }
     const length2 = x.readUInt16BE(5);
-    let index = 7;
+    let index4 = 7;
     let start;
     query.statement.columns = Array(length2);
     for (let i = 0; i < length2; ++i) {
-      start = index;
-      while (x[index++] !== 0) ;
-      const table = x.readUInt32BE(index);
-      const number = x.readUInt16BE(index + 4);
-      const type = x.readUInt32BE(index + 6);
+      start = index4;
+      while (x[index4++] !== 0) ;
+      const table = x.readUInt32BE(index4);
+      const number = x.readUInt16BE(index4 + 4);
+      const type = x.readUInt32BE(index4 + 6);
       query.statement.columns[i] = {
-        name: transform.column.from ? transform.column.from(x.toString("utf8", start, index - 1)) : x.toString("utf8", start, index - 1),
+        name: transform.column.from ? transform.column.from(x.toString("utf8", start, index4 - 1)) : x.toString("utf8", start, index4 - 1),
         parser: parsers2[type],
         table,
         number,
         type
       };
-      index += 18;
+      index4 += 18;
     }
     result.statement = query.statement;
     if (query.onlyDescribe)
@@ -1273,11 +1268,11 @@ function Connection(options, queues = {}, { onopen = noop, onend = noop, onclose
   function NotificationResponse(x) {
     if (!onnotify)
       return;
-    let index = 9;
-    while (x[index++] !== 0) ;
+    let index4 = 9;
+    while (x[index4++] !== 0) ;
     onnotify(
-      x.toString("utf8", 9, index - 1),
-      x.toString("utf8", index, x.length - 1)
+      x.toString("utf8", 9, index4 - 1),
+      x.toString("utf8", index4, x.length - 1)
     );
   }
   async function PortalSuspended() {
@@ -1467,7 +1462,7 @@ var noop2 = () => {
 function Subscribe(postgres2, options) {
   const subscribers = /* @__PURE__ */ new Map(), slot = "postgresjs_" + Math.random().toString(36).slice(2), state = {};
   let connection2, stream, ended = false;
-  const sql5 = subscribe.sql = postgres2({
+  const sql6 = subscribe.sql = postgres2({
     ...options,
     transform: { column: {}, value: {}, row: {} },
     max: 1,
@@ -1483,18 +1478,18 @@ function Subscribe(postgres2, options) {
         return;
       stream = null;
       state.pid = state.secret = void 0;
-      connected(await init(sql5, slot, options.publications));
+      connected(await init(sql6, slot, options.publications));
       subscribers.forEach((event) => event.forEach(({ onsubscribe }) => onsubscribe()));
     },
     no_subscribe: true
   });
-  const end = sql5.end, close = sql5.close;
-  sql5.end = async () => {
+  const end = sql6.end, close = sql6.close;
+  sql6.end = async () => {
     ended = true;
     stream && await new Promise((r) => (stream.once("close", r), stream.end()));
     return end();
   };
-  sql5.close = async () => {
+  sql6.close = async () => {
     stream && await new Promise((r) => (stream.once("close", r), stream.end()));
     return close();
   };
@@ -1502,7 +1497,7 @@ function Subscribe(postgres2, options) {
   async function subscribe(event, fn, onsubscribe = noop2, onerror = noop2) {
     event = parseEvent(event);
     if (!connection2)
-      connection2 = init(sql5, slot, options.publications);
+      connection2 = init(sql6, slot, options.publications);
     const subscriber = { fn, onsubscribe };
     const fns = subscribers.has(event) ? subscribers.get(event).add(subscriber) : subscribers.set(event, /* @__PURE__ */ new Set([subscriber])).get(event);
     const unsubscribe = () => {
@@ -1513,7 +1508,7 @@ function Subscribe(postgres2, options) {
       connected(x);
       onsubscribe();
       stream && stream.on("error", onerror);
-      return { unsubscribe, state, sql: sql5 };
+      return { unsubscribe, state, sql: sql6 };
     });
   }
   function connected(x) {
@@ -1521,14 +1516,14 @@ function Subscribe(postgres2, options) {
     state.pid = x.state.pid;
     state.secret = x.state.secret;
   }
-  async function init(sql6, slot2, publications) {
+  async function init(sql7, slot2, publications) {
     if (!publications)
       throw new Error("Missing publication names");
-    const xs = await sql6.unsafe(
+    const xs = await sql7.unsafe(
       `CREATE_REPLICATION_SLOT ${slot2} TEMPORARY LOGICAL pgoutput NOEXPORT_SNAPSHOT`
     );
     const [x] = xs;
-    const stream2 = await sql6.unsafe(
+    const stream2 = await sql7.unsafe(
       `START_REPLICATION SLOT ${slot2} LOGICAL ${x.consistent_point} (proto_version '1', publication_names '${publications}')`
     ).writable();
     const state2 = {
@@ -1536,14 +1531,14 @@ function Subscribe(postgres2, options) {
     };
     stream2.on("data", data);
     stream2.on("error", error);
-    stream2.on("close", sql6.close);
+    stream2.on("close", sql7.close);
     return { stream: stream2, state: xs.state };
     function error(e) {
       console.error("Unexpected error during logical streaming - reconnecting", e);
     }
     function data(x2) {
       if (x2[0] === 119) {
-        parse(x2.subarray(25), state2, sql6.options.parsers, handle, options.transform);
+        parse(x2.subarray(25), state2, sql7.options.parsers, handle, options.transform);
       } else if (x2[0] === 107 && x2[17]) {
         state2.lsn = x2.subarray(1, 9);
         pong();
@@ -1675,22 +1670,22 @@ function parseEvent(x) {
 
 // ../../node_modules/.pnpm/postgres@3.4.9/node_modules/postgres/src/large.js
 import Stream2 from "stream";
-function largeObject(sql5, oid, mode = 131072 | 262144) {
+function largeObject(sql6, oid, mode = 131072 | 262144) {
   return new Promise(async (resolve, reject) => {
-    await sql5.begin(async (sql6) => {
+    await sql6.begin(async (sql7) => {
       let finish;
-      !oid && ([{ oid }] = await sql6`select lo_creat(-1) as oid`);
-      const [{ fd }] = await sql6`select lo_open(${oid}, ${mode}) as fd`;
+      !oid && ([{ oid }] = await sql7`select lo_creat(-1) as oid`);
+      const [{ fd }] = await sql7`select lo_open(${oid}, ${mode}) as fd`;
       const lo = {
         writable,
         readable,
-        close: () => sql6`select lo_close(${fd})`.then(finish),
-        tell: () => sql6`select lo_tell64(${fd})`,
-        read: (x) => sql6`select loread(${fd}, ${x}) as data`,
-        write: (x) => sql6`select lowrite(${fd}, ${x})`,
-        truncate: (x) => sql6`select lo_truncate64(${fd}, ${x})`,
-        seek: (x, whence = 0) => sql6`select lo_lseek64(${fd}, ${x}, ${whence})`,
-        size: () => sql6`
+        close: () => sql7`select lo_close(${fd})`.then(finish),
+        tell: () => sql7`select lo_tell64(${fd})`,
+        read: (x) => sql7`select loread(${fd}, ${x}) as data`,
+        write: (x) => sql7`select lowrite(${fd}, ${x})`,
+        truncate: (x) => sql7`select lo_truncate64(${fd}, ${x})`,
+        seek: (x, whence = 0) => sql7`select lo_lseek64(${fd}, ${x}, ${whence})`,
+        size: () => sql7`
           select
             lo_lseek64(${fd}, location, 0) as position,
             seek.size
@@ -1765,12 +1760,12 @@ function Postgres(a, b2) {
   let ending = false;
   const queries = queue_default(), connecting = queue_default(), reserved = queue_default(), closed = queue_default(), ended = queue_default(), open = queue_default(), busy = queue_default(), full = queue_default(), queues = { connecting, reserved, closed, ended, open, busy, full };
   const connections = [...Array(options.max)].map(() => connection_default(options, queues, { onopen, onend, onclose }));
-  const sql5 = Sql(handler);
-  Object.assign(sql5, {
+  const sql6 = Sql(handler);
+  Object.assign(sql6, {
     get parameters() {
       return options.parameters;
     },
-    largeObject: largeObject.bind(null, sql5),
+    largeObject: largeObject.bind(null, sql6),
     subscribe,
     CLOSE,
     END: CLOSE,
@@ -1782,14 +1777,14 @@ function Postgres(a, b2) {
     close,
     end
   });
-  return sql5;
+  return sql6;
   function Sql(handler2) {
     handler2.debug = options.debug;
     Object.entries(options.types).reduce((acc, [name, type]) => {
       acc[name] = (x) => new Parameter(x, type.to);
       return acc;
     }, typed);
-    Object.assign(sql6, {
+    Object.assign(sql7, {
       types: typed,
       typed,
       unsafe,
@@ -1798,11 +1793,11 @@ function Postgres(a, b2) {
       json,
       file
     });
-    return sql6;
+    return sql7;
     function typed(value, type) {
       return new Parameter(value, type);
     }
-    function sql6(strings, ...args) {
+    function sql7(strings, ...args) {
       const query = strings && Array.isArray(strings.raw) ? new Query(strings, args, handler2, cancel) : typeof strings === "string" && !args.length ? new Identifier(options.transform.column.to ? options.transform.column.to(strings) : strings) : new Builder(strings, args);
       return query;
     }
@@ -1833,7 +1828,7 @@ function Postgres(a, b2) {
   }
   async function listen(name, fn, onlisten) {
     const listener = { fn, onlisten };
-    const sql6 = listen.sql || (listen.sql = Postgres({
+    const sql7 = listen.sql || (listen.sql = Postgres({
       ...options,
       max: 1,
       idle_timeout: null,
@@ -1857,7 +1852,7 @@ function Postgres(a, b2) {
       listener.onlisten && listener.onlisten();
       return { state: result2.state, unlisten };
     }
-    channels[name] = { result: sql6`listen ${sql6.unsafe('"' + name.replace(/"/g, '""') + '"')}`, listeners: [listener] };
+    channels[name] = { result: sql7`listen ${sql7.unsafe('"' + name.replace(/"/g, '""') + '"')}`, listeners: [listener] };
     const result = await channels[name].result;
     listener.onlisten && listener.onlisten();
     return { state: result.state, unlisten };
@@ -1868,11 +1863,11 @@ function Postgres(a, b2) {
       if (channels[name].listeners.length)
         return;
       delete channels[name];
-      return sql6`unlisten ${sql6.unsafe('"' + name.replace(/"/g, '""') + '"')}`;
+      return sql7`unlisten ${sql7.unsafe('"' + name.replace(/"/g, '""') + '"')}`;
     }
   }
   async function notify(channel, payload) {
-    return await sql5`select pg_notify(${channel}, ${"" + payload})`;
+    return await sql6`select pg_notify(${channel}, ${"" + payload})`;
   }
   async function reserve() {
     const queue = queue_default();
@@ -1884,12 +1879,12 @@ function Postgres(a, b2) {
     move(c, reserved);
     c.reserved = () => queue.length ? c.execute(queue.shift()) : move(c, reserved);
     c.reserved.release = true;
-    const sql6 = Sql(handler2);
-    sql6.release = () => {
+    const sql7 = Sql(handler2);
+    sql7.release = () => {
       c.reserved = null;
       onopen(c);
     };
-    return sql6;
+    return sql7;
     function handler2(q) {
       c.queue === full ? queue.push(q) : c.execute(q) || move(c, full);
     }
@@ -1899,7 +1894,7 @@ function Postgres(a, b2) {
     const queries2 = queue_default();
     let savepoints = 0, connection2, prepare = null;
     try {
-      await sql5.unsafe("begin " + options2.replace(/[^a-z ]/ig, ""), [], { onexecute }).execute();
+      await sql6.unsafe("begin " + options2.replace(/[^a-z ]/ig, ""), [], { onexecute }).execute();
       return await Promise.race([
         scope(connection2, fn),
         new Promise((_, reject) => connection2.onclose = reject)
@@ -1908,29 +1903,29 @@ function Postgres(a, b2) {
       throw error;
     }
     async function scope(c, fn2, name) {
-      const sql6 = Sql(handler2);
-      sql6.savepoint = savepoint;
-      sql6.prepare = (x) => prepare = x.replace(/[^a-z0-9$-_. ]/gi);
+      const sql7 = Sql(handler2);
+      sql7.savepoint = savepoint;
+      sql7.prepare = (x) => prepare = x.replace(/[^a-z0-9$-_. ]/gi);
       let uncaughtError, result;
-      name && await sql6`savepoint ${sql6(name)}`;
+      name && await sql7`savepoint ${sql7(name)}`;
       try {
         result = await new Promise((resolve, reject) => {
-          const x = fn2(sql6);
+          const x = fn2(sql7);
           Promise.resolve(Array.isArray(x) ? Promise.all(x) : x).then(resolve, reject);
         });
         if (uncaughtError)
           throw uncaughtError;
       } catch (e) {
-        await (name ? sql6`rollback to ${sql6(name)}` : sql6`rollback`);
+        await (name ? sql7`rollback to ${sql7(name)}` : sql7`rollback`);
         throw e instanceof PostgresError && e.code === "25P02" && uncaughtError || e;
       }
       if (!name) {
-        prepare ? await sql6`prepare transaction '${sql6.unsafe(prepare)}'` : await sql6`commit`;
+        prepare ? await sql7`prepare transaction '${sql7.unsafe(prepare)}'` : await sql7`commit`;
       }
       return result;
       function savepoint(name2, fn3) {
         if (name2 && Array.isArray(name2.raw))
-          return savepoint((sql7) => sql7.apply(sql7, arguments));
+          return savepoint((sql8) => sql8.apply(sql8, arguments));
         arguments.length === 1 && (fn3 = name2, name2 = null);
         return scope(c, fn3, "s" + savepoints++ + (name2 ? "_" + name2 : ""));
       }
@@ -2237,11 +2232,12 @@ var categories = pgTable("categories", {
   icon: text("icon"),
   description: text("description"),
   archived: boolean("archived").notNull().default(false),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow()
 });
 
 // ../../packages/db/src/schema/users.ts
-import { pgTable as pgTable2, text as text2, timestamp as timestamp2, pgEnum as pgEnum2 } from "drizzle-orm/pg-core";
+import { pgTable as pgTable2, text as text2, timestamp as timestamp2, pgEnum as pgEnum2, index } from "drizzle-orm/pg-core";
 import { createId as createId2 } from "@paralleldrive/cuid2";
 var workspaceRoleEnum = pgEnum2("workspace_role", ["owner", "admin", "member"]);
 var workspaceMembers = pgTable2("workspace_members", {
@@ -2251,7 +2247,9 @@ var workspaceMembers = pgTable2("workspace_members", {
   // references Better Auth's user.id
   role: workspaceRoleEnum("role").notNull().default("member"),
   joinedAt: timestamp2("joined_at", { withTimezone: true }).notNull().defaultNow()
-});
+}, (t) => [
+  index("workspace_members_workspace_id_idx").on(t.workspaceId)
+]);
 var invitations = pgTable2("invitations", {
   id: text2("id").primaryKey().$defaultFn(() => createId2()),
   workspaceId: text2("workspace_id").notNull().references(() => workspaces.id, { onDelete: "cascade" }),
@@ -2296,7 +2294,8 @@ import {
   boolean as boolean2,
   integer,
   pgEnum as pgEnum4,
-  numeric
+  numeric,
+  index as index2
 } from "drizzle-orm/pg-core";
 import { createId as createId4 } from "@paralleldrive/cuid2";
 var projectStatusEnum = pgEnum4("project_status", [
@@ -2346,7 +2345,11 @@ var projects = pgTable4("projects", {
   // Better Auth user.id
   createdAt: timestamp4("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp4("updated_at", { withTimezone: true }).notNull().defaultNow()
-});
+}, (t) => [
+  index2("projects_workspace_id_idx").on(t.workspaceId),
+  index2("projects_workspace_status_idx").on(t.workspaceId, t.status),
+  index2("projects_workspace_archived_idx").on(t.workspaceId, t.archived)
+]);
 var projectActors = pgTable4("project_actors", {
   id: text4("id").primaryKey().$defaultFn(() => createId4()),
   projectId: text4("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
@@ -2380,7 +2383,9 @@ var phases = pgTable4("phases", {
   completedAt: timestamp4("completed_at", { withTimezone: true }),
   createdAt: timestamp4("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp4("updated_at", { withTimezone: true }).notNull().defaultNow()
-});
+}, (t) => [
+  index2("phases_project_id_idx").on(t.projectId)
+]);
 var milestoneStatusEnum = pgEnum4("milestone_status", [
   "open",
   "completed"
@@ -2399,7 +2404,10 @@ var milestones = pgTable4("milestones", {
   // Better Auth user.id
   createdAt: timestamp4("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp4("updated_at", { withTimezone: true }).notNull().defaultNow()
-});
+}, (t) => [
+  index2("milestones_project_id_idx").on(t.projectId),
+  index2("milestones_phase_id_idx").on(t.phaseId)
+]);
 var taskStatusEnum = pgEnum4("task_status", [
   "todo",
   "in_progress",
@@ -2426,7 +2434,7 @@ var tasks = pgTable4("tasks", {
 });
 
 // ../../packages/db/src/schema/financials.ts
-import { pgTable as pgTable5, text as text5, timestamp as timestamp5, pgEnum as pgEnum5, numeric as numeric2 } from "drizzle-orm/pg-core";
+import { pgTable as pgTable5, text as text5, timestamp as timestamp5, pgEnum as pgEnum5, numeric as numeric2, index as index3 } from "drizzle-orm/pg-core";
 import { createId as createId5 } from "@paralleldrive/cuid2";
 var transactionTypeEnum = pgEnum5("transaction_type", [
   "income",
@@ -2474,7 +2482,10 @@ var transactions = pgTable5("transactions", {
   // Better Auth user.id
   createdAt: timestamp5("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp5("updated_at", { withTimezone: true }).notNull().defaultNow()
-});
+}, (t) => [
+  index3("transactions_project_id_idx").on(t.projectId),
+  index3("transactions_date_idx").on(t.date)
+]);
 
 // ../../packages/db/src/schema/invoices.ts
 import { pgTable as pgTable6, text as text6, timestamp as timestamp6, pgEnum as pgEnum6, numeric as numeric3, integer as integer2 } from "drizzle-orm/pg-core";
@@ -2552,7 +2563,8 @@ var auditEntityEnum = pgEnum7("audit_entity", [
   "user",
   "invitation",
   "invoice",
-  "invoice_settings"
+  "invoice_settings",
+  "category"
 ]);
 var auditActionEnum = pgEnum7("audit_action", [
   "created",
@@ -2704,7 +2716,13 @@ var queryClient = src_default(process.env["DATABASE_URL"], {
 });
 var db = drizzle(queryClient, { schema: schema_exports });
 
+// src/app.ts
+import { sql as sql5 } from "drizzle-orm";
+
 // src/lib/auth.ts
+import { betterAuth } from "better-auth";
+import { bearer } from "better-auth/plugins";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
 function slugify(name) {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 }
@@ -2733,7 +2751,7 @@ var auth = betterAuth({
       create: {
         after: async (user) => {
           const name = `${user.name}'s Workspace`;
-          const slug = slugify(name);
+          const slug = `${slugify(name)}-${Math.random().toString(36).slice(2, 8)}`;
           const [workspace] = await db.insert(workspaces).values({ name, slug }).returning();
           await db.insert(workspaceMembers).values({
             workspaceId: workspace.id,
@@ -2764,6 +2782,9 @@ var createCategorySchema = z.object({
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#6366f1"),
   icon: z.string().optional(),
   description: z.string().optional()
+});
+var updateCategorySchema = createCategorySchema.partial().extend({
+  archived: z.boolean().optional()
 });
 var projectStatuses = ["draft", "active", "on_hold", "completed", "cancelled"];
 var projectHealthValues = ["healthy", "at_risk", "delayed", "blocked"];
@@ -2913,7 +2934,7 @@ var upsertInvoiceSettingsSchema = z.object({
 });
 
 // src/routes/projects.ts
-import { eq as eq3, and as and3, sql as sql2, desc } from "drizzle-orm";
+import { eq as eq3, and as and3, sql as sql2, count as count2, desc } from "drizzle-orm";
 
 // src/middleware/auth.ts
 import { eq, and } from "drizzle-orm";
@@ -2984,17 +3005,30 @@ function slugify2(name) {
 var projectsRouter = new Hono().use(requireAuth).get("/", async (c) => {
   const { workspaceId } = c.get("auth");
   const { status, categoryId, archived } = c.req.query();
-  const rows = await db.query.projects.findMany({
-    where: and3(
-      eq3(projects.workspaceId, workspaceId),
-      eq3(projects.archived, archived === "true"),
-      status ? eq3(projects.status, status) : void 0,
-      categoryId ? eq3(projects.categoryId, categoryId) : void 0
-    ),
-    with: { category: true },
-    orderBy: [desc(projects.createdAt)]
-  });
-  return c.json({ data: rows });
+  const [rows, progressRows] = await Promise.all([
+    db.query.projects.findMany({
+      where: and3(
+        eq3(projects.workspaceId, workspaceId),
+        eq3(projects.archived, archived === "true"),
+        status ? eq3(projects.status, status) : void 0,
+        categoryId ? eq3(projects.categoryId, categoryId) : void 0
+      ),
+      with: { category: true },
+      orderBy: [desc(projects.createdAt)]
+    }),
+    db.select({
+      projectId: milestones.projectId,
+      total: count2(),
+      completed: sql2`count(*) filter (where ${milestones.status} = 'completed')`
+    }).from(milestones).innerJoin(projects, eq3(milestones.projectId, projects.id)).where(eq3(projects.workspaceId, workspaceId)).groupBy(milestones.projectId)
+  ]);
+  const progressMap = new Map(
+    progressRows.map((r) => [
+      r.projectId,
+      r.total === 0 ? 0 : Math.round(r.completed / r.total * 100)
+    ])
+  );
+  return c.json({ data: rows.map((p) => ({ ...p, progress: progressMap.get(p.id) ?? 0 })) });
 }).post("/", zValidator("json", createProjectSchema), async (c) => {
   const { workspaceId, userId } = c.get("auth");
   const body = c.req.valid("json");
@@ -3085,6 +3119,23 @@ var projectsRouter = new Hono().use(requireAuth).get("/", async (c) => {
     diff: { before: existing, after: updated }
   });
   return c.json({ data: updated });
+}).delete("/:id", requireRole("admin", "owner"), async (c) => {
+  const { workspaceId, userId } = c.get("auth");
+  const id = c.req.param("id");
+  const existing = await db.query.projects.findFirst({
+    where: and3(eq3(projects.id, id), eq3(projects.workspaceId, workspaceId))
+  });
+  if (!existing) return c.json({ error: "Not found" }, 404);
+  await db.delete(projects).where(eq3(projects.id, id));
+  await writeAuditLog({
+    workspaceId,
+    userId,
+    entity: "project",
+    entityId: id,
+    action: "deleted",
+    diff: { before: existing }
+  });
+  return c.json({ success: true });
 }).post("/:id/archive", requireRole("admin", "owner"), async (c) => {
   const { workspaceId, userId } = c.get("auth");
   const { id } = c.req.param();
@@ -3397,11 +3448,162 @@ var transactionsRouter = new Hono4().use("/projects/*", requireAuth).get("/proje
 
 // src/routes/analytics.ts
 import { Hono as Hono5 } from "hono";
-import { eq as eq7, sql as sql3, count as count2, and as and7, inArray, gte, lt, gt, desc as desc3 } from "drizzle-orm";
-var analyticsRouter = new Hono5().use(requireAuth).get("/portfolio", async (c) => {
+import { eq as eq7, sql as sql3, count as count3, and as and7, gte, lt, gt, desc as desc3, asc as asc2 } from "drizzle-orm";
+var analyticsRouter = new Hono5().use(requireAuth).get("/dashboard", async (c) => {
+  const { workspaceId } = c.get("auth");
+  const now = /* @__PURE__ */ new Date();
+  const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const pct = (cur, prv) => prv === 0 ? null : Math.round((cur - prv) / prv * 100);
+  const monthFinancials = (start, end) => db.select({
+    income: sql3`coalesce(sum(case when ${transactions.type} = 'income' then ${transactions.normalizedAmount} else 0 end), 0)`,
+    expenses: sql3`coalesce(sum(case when ${transactions.type} = 'expense' then ${transactions.normalizedAmount} else 0 end), 0)`
+  }).from(transactions).innerJoin(projects, eq7(transactions.projectId, projects.id)).where(
+    and7(
+      eq7(projects.workspaceId, workspaceId),
+      gte(transactions.date, start),
+      lt(transactions.date, end)
+    )
+  );
+  const [
+    statusCounts,
+    allTimeFinancials,
+    projectList,
+    curMonthFinancials,
+    prvMonthFinancials,
+    activeNow,
+    activeLast,
+    milestoneStats,
+    upcomingPayments,
+    actorCount,
+    memberCount,
+    progressByProject
+  ] = await Promise.all([
+    db.select({ status: projects.status, count: count3() }).from(projects).where(and7(eq7(projects.workspaceId, workspaceId), eq7(projects.archived, false))).groupBy(projects.status),
+    db.select({
+      totalIncome: sql3`coalesce(sum(case when ${transactions.type} = 'income' then ${transactions.normalizedAmount} else 0 end), 0)`,
+      totalExpenses: sql3`coalesce(sum(case when ${transactions.type} = 'expense' then ${transactions.normalizedAmount} else 0 end), 0)`
+    }).from(transactions).innerJoin(projects, eq7(transactions.projectId, projects.id)).where(eq7(projects.workspaceId, workspaceId)),
+    db.select({
+      id: projects.id,
+      name: projects.name,
+      status: projects.status,
+      health: projects.health,
+      priority: projects.priority,
+      budget: projects.budget,
+      dueDate: projects.dueDate,
+      createdAt: projects.createdAt
+    }).from(projects).where(and7(eq7(projects.workspaceId, workspaceId), eq7(projects.archived, false))).orderBy(
+      // Active first, then on_hold, draft, completed, cancelled
+      sql3`case ${projects.status}
+            when 'active' then 0
+            when 'on_hold' then 1
+            when 'draft' then 2
+            when 'completed' then 3
+            else 4 end`,
+      // Within active: most urgent health first
+      sql3`case ${projects.health}
+            when 'blocked' then 0
+            when 'delayed' then 1
+            when 'at_risk' then 2
+            else 3 end`,
+      // Then earliest due date
+      asc2(projects.dueDate)
+    ),
+    monthFinancials(thisMonthStart, nextMonthStart),
+    monthFinancials(lastMonthStart, thisMonthStart),
+    db.select({ count: count3() }).from(projects).where(and7(eq7(projects.workspaceId, workspaceId), eq7(projects.status, "active"), eq7(projects.archived, false))),
+    db.select({ count: count3() }).from(projects).where(
+      and7(
+        eq7(projects.workspaceId, workspaceId),
+        eq7(projects.status, "active"),
+        eq7(projects.archived, false),
+        lt(projects.createdAt, thisMonthStart)
+      )
+    ),
+    db.select({
+      total: count3(),
+      completed: sql3`count(*) filter (where ${milestones.status} = 'completed')`
+    }).from(milestones).innerJoin(projects, eq7(milestones.projectId, projects.id)).where(and7(eq7(projects.workspaceId, workspaceId), eq7(projects.archived, false))),
+    db.select({
+      id: transactions.id,
+      description: transactions.description,
+      type: transactions.type,
+      amount: transactions.normalizedAmount,
+      currency: transactions.workspaceCurrency,
+      date: transactions.date,
+      projectId: transactions.projectId,
+      projectName: projects.name,
+      category: transactions.category
+    }).from(transactions).innerJoin(projects, eq7(transactions.projectId, projects.id)).where(and7(eq7(projects.workspaceId, workspaceId), gt(transactions.date, now))).orderBy(transactions.date).limit(5),
+    db.select({ count: count3() }).from(actors).where(eq7(actors.workspaceId, workspaceId)),
+    db.select({ count: count3() }).from(workspaceMembers).where(eq7(workspaceMembers.workspaceId, workspaceId)),
+    db.select({
+      projectId: milestones.projectId,
+      total: count3(),
+      completed: sql3`count(*) filter (where ${milestones.status} = 'completed')`
+    }).from(milestones).innerJoin(projects, eq7(milestones.projectId, projects.id)).where(and7(eq7(projects.workspaceId, workspaceId), eq7(projects.archived, false))).groupBy(milestones.projectId)
+  ]);
+  const totalIncome = Number(allTimeFinancials[0]?.totalIncome ?? 0);
+  const totalExpenses = Number(allTimeFinancials[0]?.totalExpenses ?? 0);
+  const curIncome = Number(curMonthFinancials[0]?.income ?? 0);
+  const prvIncome = Number(prvMonthFinancials[0]?.income ?? 0);
+  const curExpenses = Number(curMonthFinancials[0]?.expenses ?? 0);
+  const prvExpenses = Number(prvMonthFinancials[0]?.expenses ?? 0);
+  const curActive = activeNow[0]?.count ?? 0;
+  const prvActive = activeLast[0]?.count ?? 0;
+  const milestoneTotal = milestoneStats[0]?.total ?? 0;
+  const milestoneCompleted = milestoneStats[0]?.completed ?? 0;
+  const overdue = projectList.filter(
+    (p) => p.status === "active" && p.dueDate && p.dueDate < now
+  ).length;
+  const progressMap = new Map(
+    progressByProject.map((r) => [
+      r.projectId,
+      r.total === 0 ? 0 : Math.round(r.completed / r.total * 100)
+    ])
+  );
+  return c.json({
+    data: {
+      portfolio: {
+        statusBreakdown: statusCounts,
+        overdue,
+        totalProjects: projectList.length,
+        financials: {
+          totalIncome,
+          totalExpenses,
+          profit: totalIncome - totalExpenses
+        }
+      },
+      trends: {
+        income: { current: curIncome, previous: prvIncome, pct: pct(curIncome, prvIncome) },
+        expenses: { current: curExpenses, previous: prvExpenses, pct: pct(curExpenses, prvExpenses) },
+        profit: {
+          current: curIncome - curExpenses,
+          previous: prvIncome - prvExpenses,
+          pct: pct(curIncome - curExpenses, prvIncome - prvExpenses)
+        },
+        activeProjects: { current: curActive, previous: prvActive, pct: pct(curActive, prvActive) }
+      },
+      projects: projectList.map((p) => ({ ...p, progress: progressMap.get(p.id) ?? 0 })),
+      milestones: {
+        total: milestoneTotal,
+        completed: milestoneCompleted,
+        completionRate: milestoneTotal === 0 ? 0 : Math.round(milestoneCompleted / milestoneTotal * 100)
+      },
+      upcomingPayments,
+      onboarding: {
+        hasProject: projectList.length > 0,
+        hasActor: (actorCount[0]?.count ?? 0) > 0,
+        hasMember: (memberCount[0]?.count ?? 0) > 1
+      }
+    }
+  });
+}).get("/portfolio", async (c) => {
   const { workspaceId } = c.get("auth");
   const [statusCounts, financials, projectList] = await Promise.all([
-    db.select({ status: projects.status, count: count2() }).from(projects).where(and7(eq7(projects.workspaceId, workspaceId), eq7(projects.archived, false))).groupBy(projects.status),
+    db.select({ status: projects.status, count: count3() }).from(projects).where(and7(eq7(projects.workspaceId, workspaceId), eq7(projects.archived, false))).groupBy(projects.status),
     db.select({
       totalIncome: sql3`coalesce(sum(case when ${transactions.type} = 'income' then ${transactions.normalizedAmount} else 0 end), 0)`,
       totalExpenses: sql3`coalesce(sum(case when ${transactions.type} = 'expense' then ${transactions.normalizedAmount} else 0 end), 0)`
@@ -3430,26 +3632,22 @@ var analyticsRouter = new Hono5().use(requireAuth).get("/portfolio", async (c) =
   const { workspaceId } = c.get("auth");
   const rows = await db.select({
     categoryId: projects.categoryId,
-    count: count2(),
+    categoryName: categories.name,
+    categoryColor: categories.color,
+    categoryIcon: categories.icon,
+    count: count3(),
     totalIncome: sql3`coalesce(sum(case when ${transactions.type} = 'income' then ${transactions.normalizedAmount} else 0 end), 0)`,
     totalExpenses: sql3`coalesce(sum(case when ${transactions.type} = 'expense' then ${transactions.normalizedAmount} else 0 end), 0)`
-  }).from(projects).leftJoin(transactions, eq7(transactions.projectId, projects.id)).where(and7(eq7(projects.workspaceId, workspaceId), eq7(projects.archived, false))).groupBy(projects.categoryId);
+  }).from(projects).leftJoin(transactions, eq7(transactions.projectId, projects.id)).leftJoin(categories, eq7(projects.categoryId, categories.id)).where(and7(eq7(projects.workspaceId, workspaceId), eq7(projects.archived, false))).groupBy(projects.categoryId, categories.name, categories.color, categories.icon);
   return c.json({ data: rows });
 }).get("/milestones-summary", async (c) => {
   const { workspaceId } = c.get("auth");
-  const projectIds = await db.select({ id: projects.id }).from(projects).where(and7(eq7(projects.workspaceId, workspaceId), eq7(projects.archived, false)));
-  if (projectIds.length === 0) {
-    return c.json({ data: { total: 0, completed: 0, completionRate: 0 } });
-  }
-  const ids = projectIds.map((p) => p.id);
-  const [total, completed] = await Promise.all([
-    db.select({ count: count2() }).from(milestones).where(inArray(milestones.projectId, ids)),
-    db.select({ count: count2() }).from(milestones).where(
-      and7(inArray(milestones.projectId, ids), eq7(milestones.status, "completed"))
-    )
-  ]);
-  const totalCount = total[0]?.count ?? 0;
-  const completedCount = completed[0]?.count ?? 0;
+  const [row] = await db.select({
+    total: count3(),
+    completed: sql3`count(*) filter (where ${milestones.status} = 'completed')`
+  }).from(milestones).innerJoin(projects, eq7(milestones.projectId, projects.id)).where(and7(eq7(projects.workspaceId, workspaceId), eq7(projects.archived, false)));
+  const totalCount = row?.total ?? 0;
+  const completedCount = row?.completed ?? 0;
   return c.json({
     data: {
       total: totalCount,
@@ -3487,10 +3685,10 @@ var analyticsRouter = new Hono5().use(requireAuth).get("/portfolio", async (c) =
   const [current, last, activeNow, activeLast] = await Promise.all([
     financials(thisMonthStart, nextMonthStart),
     financials(lastMonthStart, lastMonthEnd),
-    db.select({ count: count2() }).from(projects).where(
+    db.select({ count: count3() }).from(projects).where(
       and7(eq7(projects.workspaceId, workspaceId), eq7(projects.status, "active"), eq7(projects.archived, false))
     ),
-    db.select({ count: count2() }).from(projects).where(
+    db.select({ count: count3() }).from(projects).where(
       and7(
         eq7(projects.workspaceId, workspaceId),
         eq7(projects.status, "active"),
@@ -3635,7 +3833,7 @@ var actorsRouter = new Hono7().use(requireAuth).get("/", async (c) => {
   const { workspaceId } = c.get("auth");
   const rows = await db.query.actors.findMany({
     where: eq9(actors.workspaceId, workspaceId),
-    orderBy: (a, { asc: asc3 }) => [asc3(a.name)]
+    orderBy: (a, { asc: asc4 }) => [asc4(a.name)]
   });
   return c.json({ data: rows });
 }).post("/", zValidator6("json", createActorSchema), async (c) => {
@@ -3893,7 +4091,7 @@ var invitationsRouter = new Hono9().get("/", requireAuth, async (c) => {
 // src/routes/tasks.ts
 import { Hono as Hono10 } from "hono";
 import { zValidator as zValidator8 } from "@hono/zod-validator";
-import { eq as eq12, and as and11, asc as asc2 } from "drizzle-orm";
+import { eq as eq12, and as and11, asc as asc3 } from "drizzle-orm";
 import { createId as createId9 } from "@paralleldrive/cuid2";
 async function verifyProjectAccess4(projectId, workspaceId) {
   return db.query.projects.findFirst({
@@ -3918,7 +4116,7 @@ var tasksRouter = new Hono10().use(requireAuth).get("/:projectId/tasks", async (
     createdAt: tasks.createdAt,
     milestoneName: milestones.name,
     phaseName: phases.name
-  }).from(tasks).leftJoin(milestones, eq12(tasks.milestoneId, milestones.id)).leftJoin(phases, eq12(tasks.phaseId, phases.id)).where(eq12(tasks.projectId, projectId)).orderBy(asc2(tasks.order), asc2(tasks.createdAt));
+  }).from(tasks).leftJoin(milestones, eq12(tasks.milestoneId, milestones.id)).leftJoin(phases, eq12(tasks.phaseId, phases.id)).where(eq12(tasks.projectId, projectId)).orderBy(asc3(tasks.order), asc3(tasks.createdAt));
   return c.json({ data: rows });
 }).post("/:projectId/tasks", zValidator8("json", createTaskSchema), async (c) => {
   const { workspaceId, userId } = c.get("auth");
@@ -4307,8 +4505,91 @@ var invoicesRouter = new Hono11().use(requireAuth).get("/settings", async (c) =>
   return c.json({ data: updated });
 });
 
+// src/routes/categories.ts
+import { Hono as Hono12 } from "hono";
+import { zValidator as zValidator10 } from "@hono/zod-validator";
+import { eq as eq14, and as and13, count as count4 } from "drizzle-orm";
+var categoriesRouter = new Hono12().use(requireAuth).get("/", async (c) => {
+  const { workspaceId } = c.get("auth");
+  const { archived } = c.req.query();
+  const rows = await db.query.categories.findMany({
+    where: and13(
+      eq14(categories.workspaceId, workspaceId),
+      archived === void 0 ? void 0 : eq14(categories.archived, archived === "true")
+    ),
+    orderBy: (cat, { asc: asc4 }) => [asc4(cat.name)]
+  });
+  const counts = await db.select({ categoryId: projects.categoryId, total: count4() }).from(projects).where(eq14(projects.workspaceId, workspaceId)).groupBy(projects.categoryId);
+  const countMap = new Map(counts.map((r) => [r.categoryId, r.total]));
+  return c.json({
+    data: rows.map((cat) => ({ ...cat, projectCount: countMap.get(cat.id) ?? 0 }))
+  });
+}).post("/", zValidator10("json", createCategorySchema), async (c) => {
+  const { workspaceId, userId } = c.get("auth");
+  const body = c.req.valid("json");
+  const [category] = await db.insert(categories).values({
+    workspaceId,
+    name: body.name,
+    color: body.color,
+    icon: body.icon,
+    description: body.description
+  }).returning();
+  await writeAuditLog({
+    workspaceId,
+    userId,
+    entity: "category",
+    entityId: category.id,
+    action: "created",
+    metadata: { name: body.name }
+  });
+  return c.json({ data: category }, 201);
+}).get("/:id", async (c) => {
+  const { workspaceId } = c.get("auth");
+  const { id } = c.req.param();
+  const category = await db.query.categories.findFirst({
+    where: and13(eq14(categories.id, id), eq14(categories.workspaceId, workspaceId))
+  });
+  if (!category) return c.json({ error: "Not found" }, 404);
+  return c.json({ data: category });
+}).patch("/:id", zValidator10("json", updateCategorySchema), async (c) => {
+  const { workspaceId, userId } = c.get("auth");
+  const { id } = c.req.param();
+  const body = c.req.valid("json");
+  const existing = await db.query.categories.findFirst({
+    where: and13(eq14(categories.id, id), eq14(categories.workspaceId, workspaceId))
+  });
+  if (!existing) return c.json({ error: "Not found" }, 404);
+  const [updated] = await db.update(categories).set({ ...body, updatedAt: /* @__PURE__ */ new Date() }).where(eq14(categories.id, id)).returning();
+  await writeAuditLog({
+    workspaceId,
+    userId,
+    entity: "category",
+    entityId: id,
+    action: body.archived !== void 0 && body.archived !== existing.archived ? "archived" : "updated",
+    diff: { before: existing, after: updated }
+  });
+  return c.json({ data: updated });
+}).delete("/:id", async (c) => {
+  const { workspaceId, userId } = c.get("auth");
+  const { id } = c.req.param();
+  const existing = await db.query.categories.findFirst({
+    where: and13(eq14(categories.id, id), eq14(categories.workspaceId, workspaceId))
+  });
+  if (!existing) return c.json({ error: "Not found" }, 404);
+  await db.delete(categories).where(eq14(categories.id, id));
+  await writeAuditLog({
+    workspaceId,
+    userId,
+    entity: "category",
+    entityId: id,
+    action: "deleted",
+    diff: { before: existing }
+  });
+  return c.json({ success: true });
+});
+
 // src/app.ts
-var app = new Hono12();
+var app = new Hono13();
 app.use("*", logger());
 app.use(
   "*",
@@ -4320,6 +4601,14 @@ app.use(
 );
 app.on(["GET", "POST"], "/api/auth/*", (c) => auth.handler(c.req.raw));
 app.get("/health", (c) => c.json({ status: "ok" }));
+app.get("/api/cron/warm", async (c) => {
+  try {
+    await db.execute(sql5`select 1`);
+    return c.json({ status: "warm" });
+  } catch {
+    return c.json({ status: "error" }, 500);
+  }
+});
 app.route("/api/projects", projectsRouter);
 app.route("/api/projects", phasesRouter);
 app.route("/api/projects", milestonesRouter);
@@ -4331,6 +4620,7 @@ app.route("/api", transactionsRouter);
 app.route("/api/invitations", invitationsRouter);
 app.route("/api/projects", tasksRouter);
 app.route("/api/invoices", invoicesRouter);
+app.route("/api/categories", categoriesRouter);
 var app_default = app;
 
 // src/vercel.ts
