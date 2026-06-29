@@ -2974,8 +2974,8 @@ function requireRole(...roles) {
 }
 
 // src/lib/audit.ts
-function writeAuditLog(params) {
-  db.insert(auditLogs).values({
+async function writeAuditLog(params) {
+  await db.insert(auditLogs).values({
     workspaceId: params.workspaceId,
     userId: params.userId ?? null,
     entity: params.entity,

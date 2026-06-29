@@ -13,8 +13,8 @@ interface AuditParams {
   metadata?: Record<string, unknown>;
 }
 
-export function writeAuditLog(params: AuditParams): void {
-  db.insert(auditLogs).values({
+export async function writeAuditLog(params: AuditParams): Promise<void> {
+  await db.insert(auditLogs).values({
     workspaceId: params.workspaceId,
     userId: params.userId ?? null,
     entity: params.entity,
