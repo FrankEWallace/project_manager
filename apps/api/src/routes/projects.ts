@@ -98,7 +98,7 @@ export const projectsRouter = new Hono()
 
     if (!project) return c.json({ error: "Not found" }, 404);
 
-    const [progress, [financials]] = await Promise.all([
+    const [milestoneStats, [financials]] = await Promise.all([
       computeProjectProgress(id),
       db
         .select({
@@ -112,7 +112,11 @@ export const projectsRouter = new Hono()
     return c.json({
       data: {
         ...project,
-        progress,
+        progress: milestoneStats.percentage,
+        milestoneStats: {
+          total: milestoneStats.totalMilestones,
+          completed: milestoneStats.completedMilestones,
+        },
         financials: {
           totalIncome: Number(financials?.totalIncome ?? 0),
           totalExpenses: Number(financials?.totalExpenses ?? 0),

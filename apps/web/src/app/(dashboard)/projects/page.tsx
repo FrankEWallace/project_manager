@@ -154,7 +154,7 @@ export default function ProjectsPage() {
       else if (sortKey === "progress") cmp = a.progress - b.progress;
       return sortDir === "asc" ? cmp : -cmp;
     });
-  }, [projects, sortKey, sortDir, statusFilter]);
+  }, [projects, sortKey, sortDir, statusFilter, categoryFilter]);
 
   const statusCounts = useMemo(() => {
     if (!projects) return {};
