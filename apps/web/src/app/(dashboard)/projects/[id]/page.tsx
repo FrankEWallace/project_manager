@@ -660,7 +660,6 @@ function FinancialsTab({ projectId, currency }: { projectId: string; currency: s
     if (result) { setAddOpen(false); setForm({ type: "income", category: "client_payment", description: "", amount: "", date: new Date().toISOString().slice(0, 10), actorId: "", notes: "" }); refetch(); }
   }
 
-  const { mutate: deleteTx } = useMutation<object, unknown>(`/api/projects/${projectId}/transactions/placeholder`, "DELETE");
   const { data: session } = useSession();
   const workspaceId = getWorkspaceId();
 
