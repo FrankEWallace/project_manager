@@ -3,7 +3,7 @@
 import * as React from "react";
 import { CartesianGrid, Line, LineChart, Area, AreaChart, XAxis, YAxis, Bar, BarChart } from "recharts";
 import { useApi } from "@/hooks/use-api";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -279,14 +279,17 @@ export default function AnalyticsPage() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {kpis.map(({ label, value, icon, pct, danger }) => (
           <Card key={label}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
-                {icon} {label}
+            <CardHeader className="pb-2 flex-row items-start justify-between space-y-0">
+              <CardTitle className="text-xs font-medium text-muted-foreground leading-none pt-0.5">
+                {label}
               </CardTitle>
+              <div className="h-6 w-6 grid place-items-center rounded-sm bg-muted shrink-0">
+                {icon}
+              </div>
             </CardHeader>
-            <CardContent className="space-y-1">
+            <CardContent className="space-y-1.5">
               {loading ? <Skeleton className="h-8 w-16" /> : (
-                <p className={`text-2xl font-semibold ${danger && value > 0 ? "text-destructive" : "text-foreground"}`}>
+                <p className={`text-2xl font-semibold tabular-nums leading-none ${danger && value > 0 ? "text-destructive" : "text-foreground"}`}>
                   {value}
                 </p>
               )}
@@ -299,14 +302,15 @@ export default function AnalyticsPage() {
       {/* Financial breakdown */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-green-500" /> Total revenue
-            </CardTitle>
+          <CardHeader className="pb-2 flex-row items-start justify-between space-y-0">
+            <CardTitle className="text-xs font-medium text-muted-foreground leading-none pt-0.5">Total revenue</CardTitle>
+            <div className="h-6 w-6 grid place-items-center rounded-sm bg-muted shrink-0">
+              <TrendingUp className="h-3.5 w-3.5 text-green-500" />
+            </div>
           </CardHeader>
-          <CardContent className="space-y-1">
+          <CardContent className="space-y-1.5">
             {portfolioLoading ? <Skeleton className="h-9 w-32" /> : (
-              <p className="text-2xl font-semibold text-foreground">
+              <p className="text-2xl font-semibold tabular-nums leading-none text-foreground">
                 {formatCurrency(portfolio?.financials.totalIncome ?? 0)}
               </p>
             )}
@@ -315,14 +319,15 @@ export default function AnalyticsPage() {
         </Card>
 
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <TrendingDown className="h-4 w-4 text-destructive" /> Total expenses
-            </CardTitle>
+          <CardHeader className="pb-2 flex-row items-start justify-between space-y-0">
+            <CardTitle className="text-xs font-medium text-muted-foreground leading-none pt-0.5">Total expenses</CardTitle>
+            <div className="h-6 w-6 grid place-items-center rounded-sm bg-muted shrink-0">
+              <TrendingDown className="h-3.5 w-3.5 text-destructive" />
+            </div>
           </CardHeader>
-          <CardContent className="space-y-1">
+          <CardContent className="space-y-1.5">
             {portfolioLoading ? <Skeleton className="h-9 w-32" /> : (
-              <p className="text-2xl font-semibold text-foreground">
+              <p className="text-2xl font-semibold tabular-nums leading-none text-foreground">
                 {formatCurrency(portfolio?.financials.totalExpenses ?? 0)}
               </p>
             )}
@@ -331,12 +336,15 @@ export default function AnalyticsPage() {
         </Card>
 
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Net profit</CardTitle>
+          <CardHeader className="pb-2 flex-row items-start justify-between space-y-0">
+            <CardTitle className="text-xs font-medium text-muted-foreground leading-none pt-0.5">Net profit</CardTitle>
+            <div className="h-6 w-6 grid place-items-center rounded-sm bg-muted shrink-0">
+              <TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />
+            </div>
           </CardHeader>
-          <CardContent className="space-y-1">
+          <CardContent className="space-y-1.5">
             {portfolioLoading ? <Skeleton className="h-9 w-32" /> : (
-              <p className={`text-2xl font-semibold ${profit >= 0 ? "text-green-600" : "text-destructive"}`}>
+              <p className={`text-2xl font-semibold tabular-nums leading-none ${profit >= 0 ? "text-green-600" : "text-destructive"}`}>
                 {formatCurrency(profit)}
               </p>
             )}

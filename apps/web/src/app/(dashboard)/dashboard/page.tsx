@@ -184,18 +184,20 @@ export default function DashboardPage() {
         {/* KPI row */}
         <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
           {kpis.map((kpi) => (
-            <div key={kpi.label} className="bg-muted/40 rounded-2xl p-5 flex flex-col gap-3">
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">{kpi.label}</p>
-                {kpi.icon}
+            <div key={kpi.label} className="bg-muted/40 rounded-2xl p-4 sm:p-5 flex flex-col gap-4">
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-xs font-medium text-muted-foreground leading-none pt-0.5">{kpi.label}</p>
+                <div className="h-6 w-6 grid place-items-center rounded-sm bg-background border border-border/60 shrink-0">
+                  {kpi.icon}
+                </div>
               </div>
               {loading ? (
                 <Skeleton className="h-8 w-28" />
               ) : (
-                <>
+                <div className="space-y-1.5">
                   <span
                     className={[
-                      "text-2xl font-semibold leading-none tracking-tight",
+                      "text-2xl font-semibold leading-none tracking-tight tabular-nums",
                       kpi.colored
                         ? (kpi.profit ?? 0) >= 0 ? "text-green-600" : "text-destructive"
                         : "text-foreground",
@@ -204,7 +206,7 @@ export default function DashboardPage() {
                     {kpi.value}
                   </span>
                   <TrendLabel pct={kpi.pct} invert={kpi.invert} />
-                </>
+                </div>
               )}
             </div>
           ))}
