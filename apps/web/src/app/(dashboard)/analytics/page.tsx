@@ -87,8 +87,11 @@ function IncomeExpenseChart() {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-sm font-medium">Income vs Expenses</CardTitle>
+      <CardHeader className="flex flex-row items-center justify-between gap-4">
+        <div>
+          <CardTitle className="text-sm font-medium">Income vs Expenses</CardTitle>
+          <CardDescription>Revenue trend over time</CardDescription>
+        </div>
         <Select value={period} onValueChange={setPeriod}>
           <SelectTrigger className="w-32 h-8 text-xs">
             <SelectValue />
@@ -168,7 +171,10 @@ function ByCategorySection({ data, loading, totalProjects }: {
   if (loading) {
     return (
       <Card>
-        <CardHeader><CardTitle className="text-sm font-medium">By category</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle className="text-sm font-medium">By category</CardTitle>
+          <CardDescription>Income and expenses per project category</CardDescription>
+        </CardHeader>
         <CardContent><Skeleton className="h-40 w-full" /></CardContent>
       </Card>
     );
@@ -178,6 +184,8 @@ function ByCategorySection({ data, loading, totalProjects }: {
 
   // Horizontal bar chart for ≥3 categories, styled list for <3
   if (data.length >= 3) {
+    const maxLabelLen = Math.max(...data.map((d) => (d.categoryId ?? "Uncategorized").length));
+    const yAxisWidth = Math.min(Math.max(maxLabelLen * 7, 80), 140);
     const chartData = data.map((item) => ({
       name: item.categoryId ?? "Uncategorized",
       income: Number(item.totalIncome),
@@ -186,27 +194,30 @@ function ByCategorySection({ data, loading, totalProjects }: {
 
     return (
       <Card>
-        <CardHeader><CardTitle className="text-sm font-medium">By category</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle className="text-sm font-medium">By category</CardTitle>
+          <CardDescription>Income and expenses per project category</CardDescription>
+        </CardHeader>
         <CardContent>
-          <ChartContainer config={chartConfig} className="w-full" style={{ height: `${Math.max(180, data.length * 48)}px` }}>
-            <BarChart data={chartData} layout="vertical" margin={{ top: 0, right: 16, bottom: 0, left: 0 }}>
-              <CartesianGrid horizontal={false} strokeDasharray="3 3" />
+          <ChartContainer config={chartConfig} className="w-full" style={{ height: `${Math.max(180, data.length * 52)}px` }}>
+            <BarChart data={chartData} layout="vertical" barCategoryGap="40%" barGap={3} margin={{ top: 0, right: 16, bottom: 0, left: 0 }}>
+              <CartesianGrid horizontal={false} stroke="var(--color-border)" strokeOpacity={0.4} />
               <XAxis type="number" hide axisLine={false} tickLine={false} />
               <YAxis
                 type="category"
                 dataKey="name"
                 axisLine={false}
                 tickLine={false}
-                tick={{ fontSize: 12 }}
-                width={100}
+                tick={{ fontSize: 12, fill: "var(--color-muted-foreground)" }}
+                width={yAxisWidth}
               />
               <ChartTooltip
                 content={
                   <ChartTooltipContent formatter={(v) => formatCurrency(Number(v))} />
                 }
               />
-              <Bar dataKey="income" fill="var(--color-income)" radius={[0, 3, 3, 0]} barSize={10} />
-              <Bar dataKey="expenses" fill="var(--color-expenses)" radius={[0, 3, 3, 0]} barSize={10} />
+              <Bar dataKey="income" fill="var(--color-income)" radius={[0, 4, 4, 0]} barSize={11} />
+              <Bar dataKey="expenses" fill="var(--color-expenses)" radius={[0, 4, 4, 0]} barSize={11} />
             </BarChart>
           </ChartContainer>
         </CardContent>
@@ -420,6 +431,7 @@ export default function AnalyticsPage() {
           <CardTitle className="text-sm font-medium flex items-center gap-2">
             <TrendingDown className="h-4 w-4 text-red-400" /> Top spending projects
           </CardTitle>
+          <CardDescription>Projects with the highest total expenses</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           {topSpendingLoading ? (
