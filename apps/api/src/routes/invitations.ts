@@ -8,6 +8,7 @@ import { createId } from "@paralleldrive/cuid2";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { inviteUserSchema } from "@repo/validators";
 import { auth } from "../lib/auth.js";
+import { writeAuditLog } from "../lib/audit.js";
 
 const resend = process.env["RESEND_API_KEY"] ? new Resend(process.env["RESEND_API_KEY"]) : null;
 
@@ -91,6 +92,15 @@ export const invitationsRouter = new Hono()
       console.log(`[invite] ${email} → ${inviteUrl}`);
     }
 
+    await writeAuditLog({
+      workspaceId,
+      userId,
+      entity: "invitation",
+      entityId: invite!.id,
+      action: "invited",
+      metadata: { email, role },
+    });
+
     return c.json({ data: invite }, 201);
   })
 
@@ -106,6 +116,17 @@ export const invitationsRouter = new Hono()
       .returning();
 
     if (!deleted) return c.json({ error: "Not found" }, 404);
+
+    const { userId } = c.get("auth");
+    await writeAuditLog({
+      workspaceId,
+      userId,
+      entity: "invitation",
+      entityId: id,
+      action: "deleted",
+      metadata: { email: deleted.email, role: deleted.role },
+    });
+
     return c.json({ data: deleted });
   })
 
@@ -177,6 +198,15 @@ export const invitationsRouter = new Hono()
       .update(invitations)
       .set({ acceptedAt: new Date() } as any)
       .where(eq(invitations.id, invite.id));
+
+    await writeAuditLog({
+      workspaceId: invite.workspaceId,
+      userId: session.user.id,
+      entity: "invitation",
+      entityId: invite.id,
+      action: "member_added",
+      metadata: { email: invite.email, role: invite.role },
+    });
 
     return c.json({ data: { workspaceId: invite.workspaceId, member } });
   });
