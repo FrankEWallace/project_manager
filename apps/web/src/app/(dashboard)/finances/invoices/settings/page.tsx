@@ -3,12 +3,12 @@
 import * as React from "react";
 import Link from "next/link";
 import { useApi, useMutation } from "@/hooks/use-api";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Check } from "lucide-react";
 
 interface InvoiceSettings {
   invoicePrefix: string;
@@ -69,12 +69,12 @@ export default function InvoiceSettingsPage() {
     <div className="p-6 max-w-2xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" asChild>
+        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 shrink-0" asChild>
           <Link href="/finances"><ArrowLeft className="h-4 w-4" /></Link>
         </Button>
         <div>
           <h1 className="text-xl font-semibold text-foreground">Invoice settings</h1>
-          <p className="text-xs text-muted-foreground">Your company details and invoice defaults</p>
+          <p className="text-xs text-muted-foreground">Company details and defaults applied to every invoice</p>
         </div>
       </div>
 
@@ -88,6 +88,7 @@ export default function InvoiceSettingsPage() {
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium">Your company</CardTitle>
+              <CardDescription>Appears in the sender section of each invoice.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-1.5">
@@ -140,22 +141,24 @@ export default function InvoiceSettingsPage() {
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium">Invoice defaults</CardTitle>
+              <CardDescription>Pre-filled values when creating a new invoice.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-1.5">
-                  <Label htmlFor="prefix">Invoice prefix</Label>
+                  <Label htmlFor="prefix">Number prefix</Label>
                   <Input
                     id="prefix"
                     value={prefix}
                     onChange={(e) => setPrefix(e.target.value.toUpperCase())}
                     maxLength={10}
                     placeholder="INV"
+                    className="font-mono"
                   />
-                  <p className="text-xs text-muted-foreground">e.g. INV-001</p>
+                  <p className="text-xs text-muted-foreground">e.g. {prefix || "INV"}-001</p>
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="taxRate">Default tax rate (%)</Label>
+                  <Label htmlFor="taxRate">Tax rate (%)</Label>
                   <Input
                     id="taxRate"
                     type="number"
@@ -167,15 +170,19 @@ export default function InvoiceSettingsPage() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="terms">Payment terms (days)</Label>
-                  <Input
-                    id="terms"
-                    type="number"
-                    min={0}
-                    max={365}
-                    value={defaultPaymentTermsDays}
-                    onChange={(e) => setDefaultPaymentTermsDays(Number(e.target.value))}
-                  />
+                  <Label htmlFor="terms">Payment terms</Label>
+                  <div className="relative">
+                    <Input
+                      id="terms"
+                      type="number"
+                      min={0}
+                      max={365}
+                      value={defaultPaymentTermsDays}
+                      onChange={(e) => setDefaultPaymentTermsDays(Number(e.target.value))}
+                      className="pr-10"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">days</span>
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -184,27 +191,37 @@ export default function InvoiceSettingsPage() {
           {/* Payment details */}
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Payment details</CardTitle>
+              <CardTitle className="text-sm font-medium">Payment instructions</CardTitle>
+              <CardDescription>Bank details or payment links printed at the bottom of every invoice.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-1.5">
-                <Label htmlFor="paymentDetails">Bank / payment instructions</Label>
+                <Label htmlFor="paymentDetails" className="sr-only">Payment instructions</Label>
                 <Textarea
                   id="paymentDetails"
                   value={paymentDetails}
                   onChange={(e) => setPaymentDetails(e.target.value)}
-                  placeholder={"Bank: First National\nAccount: 0000000\nRouting: 000000000\nReference: invoice number"}
+                  placeholder={"Bank: First National\nAccount: 0000000\nRouting: 000000000\nRef: invoice number"}
                   rows={4}
+                  className="font-mono text-xs"
                 />
-                <p className="text-xs text-muted-foreground">Printed on every invoice.</p>
               </div>
             </CardContent>
           </Card>
 
           <div className="flex justify-end">
-            <Button type="submit" disabled={saving}>
-              <Save className="h-4 w-4 mr-1.5" />
-              {saving ? "Saving…" : saved ? "Saved!" : "Save settings"}
+            <Button
+              type="submit"
+              disabled={saving}
+              className={saved ? "bg-green-600 hover:bg-green-600 text-white" : ""}
+            >
+              {saved ? (
+                <><Check className="h-4 w-4 mr-1.5" />Saved</>
+              ) : saving ? (
+                "Saving…"
+              ) : (
+                "Save settings"
+              )}
             </Button>
           </div>
         </form>

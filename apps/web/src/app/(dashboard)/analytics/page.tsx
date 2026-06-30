@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { CartesianGrid, Line, LineChart, XAxis, YAxis, Bar, BarChart, ResponsiveContainer } from "recharts";
+import { CartesianGrid, Line, LineChart, Area, AreaChart, XAxis, YAxis, Bar, BarChart } from "recharts";
 import { useApi } from "@/hooks/use-api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -61,8 +61,8 @@ const statusColors: Record<string, string> = {
 };
 
 const chartConfig: ChartConfig = {
-  income: { label: "Income", color: "oklch(0.723 0.219 149.579)" },
-  expenses: { label: "Expenses", color: "oklch(0.577 0.245 27.325)" },
+  income: { label: "Income", color: "var(--color-green-500)" },
+  expenses: { label: "Expenses", color: "var(--color-red-400)" },
 };
 
 // ─── Income vs Expense Chart ──────────────────────────────────────────────────
@@ -105,8 +105,14 @@ function IncomeExpenseChart() {
           <Skeleton className="h-56 w-full" />
         ) : data && data.length > 0 ? (
           <ChartContainer config={chartConfig} className="h-56 w-full">
-            <LineChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
-              <CartesianGrid vertical={false} strokeDasharray="3 3" />
+            <AreaChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
+              <defs>
+                <linearGradient id="incomeGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="var(--color-income)" stopOpacity={0.12} />
+                  <stop offset="95%" stopColor="var(--color-income)" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid vertical={false} stroke="var(--color-border)" strokeOpacity={0.5} strokeDasharray="0" />
               <XAxis
                 dataKey="period"
                 tickFormatter={formatLabel}
@@ -115,11 +121,7 @@ function IncomeExpenseChart() {
                 tick={{ fontSize: 11 }}
                 tickMargin={8}
               />
-              <YAxis
-                hide
-                axisLine={false}
-                tickLine={false}
-              />
+              <YAxis hide axisLine={false} tickLine={false} />
               <ChartTooltip
                 content={
                   <ChartTooltipContent
@@ -128,22 +130,23 @@ function IncomeExpenseChart() {
                   />
                 }
               />
-              <Line
+              <Area
                 dataKey="income"
                 stroke="var(--color-income)"
                 strokeWidth={2}
+                fill="url(#incomeGradient)"
                 dot={false}
                 strokeLinecap="round"
               />
               <Line
                 dataKey="expenses"
                 stroke="var(--color-expenses)"
-                strokeWidth={2}
+                strokeWidth={1.5}
                 dot={false}
                 strokeLinecap="round"
-                strokeDasharray="5 5"
+                strokeDasharray="4 4"
               />
-            </LineChart>
+            </AreaChart>
           </ChartContainer>
         ) : (
           <div className="flex h-56 items-center justify-center text-muted-foreground text-sm">
